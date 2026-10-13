@@ -1,8 +1,6 @@
 package godns
 
 import (
-	"encoding/binary"
-	"errors"
 	"fmt"
 )
 
@@ -85,75 +83,6 @@ func (q *DNSQuestion) String() string {
 type DNSRecord struct {
 }
 
-// Parsers
-var MalformedDNSMessageError = errors.New("Malformed DNS Message")
-
-func NewDnsMessageFromBuffer(buffer []byte) (*DNSMessage, error) {
-	// parse dns header
-	// 12 bytes
-	id := binary.BigEndian.Uint16(buffer[:2])
-	qr := (buffer[2]>>7)&1 == 1
-	opcode := (buffer[2] >> 4) & 0b111
-	aa := (buffer[2]>>2)&1 == 1
-	tc := (buffer[2]>>1)&1 == 1
-	rd := (buffer[2] & 1) == 1
-	ra := (buffer[3]>>7)&1 == 1
-	z := (buffer[3] >> 4) & 0b111
-	rcode := buffer[3] & 0b111
-	qdcount := binary.BigEndian.Uint16(buffer[4:6])
-	ancount := binary.BigEndian.Uint16(buffer[6:8])
-	nscount := binary.BigEndian.Uint16(buffer[8:10])
-	arcount := binary.BigEndian.Uint16(buffer[10:12])
-	dnsHeader := &DNSHeader{}
-	dnsHeader.ID = id
-	dnsHeader.QR = qr
-	dnsHeader.Opcode = Opcode(opcode)
-	dnsHeader.AuthoritativeAnswer = aa
-	dnsHeader.Truncation = tc
-	dnsHeader.RecursionDesired = rd
-	dnsHeader.RecursionAvailable = ra
-	dnsHeader.Z = z
-	dnsHeader.ResponseCode = ResponseCode(rcode)
-	dnsHeader.Qdcount = qdcount
-	dnsHeader.Ancount = ancount
-	dnsHeader.Nscount = nscount
-	dnsHeader.Arcount = arcount
-
-	// parse questions section
-	questions := []*DNSQuestion{}
-	idx := 12
-	for i := 0; i < int(qdcount); i++ {
-		// parse the qname
-		// qname is represented by a sequence of labels
-		// with the format [l1],[byte]xl1,...,[ln],[byte]xln,[0]
-		// ending in the zero byte (root)
-		qname := ""
-		for buffer[idx] != byte(0) {
-			length := int(buffer[idx])
-			start := idx + 1
-			end := start + length
-			domain := string(buffer[start:end])
-			qname += domain + "."
-
-			// update idx to next length octet or zero byte
-			idx = end
-		}
-
-		qtype := Type(binary.BigEndian.Uint16(buffer[idx+1 : idx+3]))
-		qclass := Class(binary.BigEndian.Uint16(buffer[idx+3 : idx+5]))
-		question := &DNSQuestion{
-			Qname:  qname,
-			Qtype:  qtype,
-			Qclass: qclass,
-		}
-		questions = append(questions, question)
-		idx += 5
-	}
-
-	// build dns message
-	message := &DNSMessage{}
-	message.Header = dnsHeader
-	message.Questions = questions
-
-	return message, nil
+func printByte(b byte) {
+	fmt.Printf("%08b\n", b)
 }

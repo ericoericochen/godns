@@ -18,8 +18,11 @@ func main() {
 	}
 
 	// parse into DNS message
-	message, err := godns.NewDnsMessageFromBuffer(data)
-	fmt.Println(message.Header)
+	message := &godns.DNSMessage{}
+	parser := godns.NewDNSMessageParser(data)
+	err = parser.Parse(message)
+	// message, err := godns.NewDnsMessageFromBuffer(data)
+	// fmt.Println(message.Header)
 
 	fmt.Println(message.Questions[0])
 }
