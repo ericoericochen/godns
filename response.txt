@@ -1,0 +1,26 @@
+; <<>> DiG 9.10.6 <<>> @1.1.1.1 www.google.com A
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 41163
+;; flags: qr rd ra; QUERY: 1, ANSWER: 8, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 1232
+;; QUESTION SECTION:
+;www.google.com.			IN	A
+
+;; ANSWER SECTION:
+www.google.com.		253	IN	A	142.251.155.119
+www.google.com.		253	IN	A	142.251.154.119
+www.google.com.		253	IN	A	142.251.157.119
+www.google.com.		253	IN	A	142.251.150.119
+www.google.com.		253	IN	A	142.251.156.119
+www.google.com.		253	IN	A	142.251.153.119
+www.google.com.		253	IN	A	142.251.152.119
+www.google.com.		253	IN	A	142.251.151.119
+
+;; Query time: 14 msec
+;; SERVER: 1.1.1.1#53(1.1.1.1)
+;; WHEN: Sat Oct 10 17:11:54 EDT 2026
+;; MSG SIZE  rcvd: 171
