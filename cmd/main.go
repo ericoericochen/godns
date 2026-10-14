@@ -21,8 +21,12 @@ func main() {
 	message := &godns.DNSMessage{}
 	parser := godns.NewDNSMessageParser(data)
 	err = parser.Parse(message)
-	// message, err := godns.NewDnsMessageFromBuffer(data)
-	// fmt.Println(message.Header)
 
-	fmt.Println(message.Questions[0])
+	for _, record := range message.Answers {
+		fmt.Println(record)
+	}
+	fmt.Println("---")
+	for _, record := range message.Additionals {
+		fmt.Println(record)
+	}
 }

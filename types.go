@@ -80,7 +80,39 @@ func (q *DNSQuestion) String() string {
 }
 
 // DNS Resource Record
+
+//                                1  1  1  1  1  1
+//  0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
+// +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+// |                                               |
+// /                                               /
+// /                      NAME                     /
+// |                                               |
+// +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+// |                      TYPE                     |
+// +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+// |                     CLASS                     |
+// +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+// |                      TTL                      |
+// |                                               |
+// +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+// |                   RDLENGTH                    |
+// +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--|
+// /                     RDATA                     /
+// /                                               /
+// +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+
 type DNSRecord struct {
+	Name  string
+	Type  Type
+	Class Class
+	TTL   uint32
+	RData string
+}
+
+func (r *DNSRecord) String() string {
+	return fmt.Sprintf(`DNSRecord { NAME: %v, TYPE: %v, CLASS: %v, TTL: %v, RDATA: %v }`,
+		r.Name, typeNameMap[r.Type], classNameMap[r.Class], r.TTL, r.RData)
 }
 
 func printByte(b byte) {

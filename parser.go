@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"strings"
 )
 
 var MalformedDNSMessageError = errors.New("Malformed DNS Message")
@@ -59,14 +60,10 @@ func (p *DNSMessageParser) Parse(dest *DNSMessage) error {
 	questions := []*DNSQuestion{}
 	p.idx = 12
 	for i := 0; i < int(qdcount); i++ {
-
 		qname, err := p.parseName()
 		if err != nil {
 			return err
 		}
-
-		fmt.Println("qname: ", qname)
-
 		qtype := Type(binary.BigEndian.Uint16(buffer[p.idx : p.idx+2]))
 		qclass := Class(binary.BigEndian.Uint16(buffer[p.idx+2 : p.idx+4]))
 		question := &DNSQuestion{
@@ -79,22 +76,39 @@ func (p *DNSMessageParser) Parse(dest *DNSMessage) error {
 	}
 
 	// parse answer, authority, and additional sections
-	totalRRs := ancount + nscount + arcount
+	totalRecords := ancount + nscount + arcount
+	records := []*DNSRecord{}
 
-	for i := 0; i < int(totalRRs); i++ {
+	for i := 0; i < int(totalRecords); i++ {
 		name, err := p.parseName()
 		if err != nil {
 			return err
 		}
+		recordType := Type(binary.BigEndian.Uint16(buffer[p.idx : p.idx+2]))
+		class := Class(binary.BigEndian.Uint16(buffer[p.idx+2 : p.idx+4]))
+		ttl := binary.BigEndian.Uint32(buffer[p.idx+4 : p.idx+8])
+		rdlength := binary.BigEndian.Uint16(buffer[p.idx+8 : p.idx+10])
 
-		fmt.Println("name: ", name)
-		break
-
+		// assume IN and A
+		rdataBuffer := buffer[p.idx+10 : p.idx+10+int(rdlength)]
+		rdata := parseIPv4Address(rdataBuffer)
+		record := &DNSRecord{
+			Name:  name,
+			Type:  recordType,
+			Class: class,
+			TTL:   ttl,
+			RData: rdata,
+		}
+		records = append(records, record)
+		p.idx += 10 + int(rdlength)
 	}
 
 	// build dns message
 	dest.Header = dnsHeader
 	dest.Questions = questions
+	dest.Answers = records[:ancount]
+	dest.Authorities = records[ancount : ancount+nscount]
+	dest.Additionals = records[ancount+nscount:]
 
 	return nil
 }
@@ -141,6 +155,14 @@ func isLabelByte(b byte) bool {
 
 func isMessagePointerByte(b byte) bool {
 	return b == byte(0b11000000)
+}
+
+func parseIPv4Address(buffer []byte) string {
+	nums := []string{}
+	for _, b := range buffer {
+		nums = append(nums, fmt.Sprintf("%v", b))
+	}
+	return strings.Join(nums, ".")
 }
 
 // parse the qname
