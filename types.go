@@ -2,6 +2,7 @@ package godns
 
 import (
 	"fmt"
+	"io"
 )
 
 /**
@@ -24,6 +25,11 @@ type DNSMessage struct {
 	Answers     []*DNSRecord
 	Authorities []*DNSRecord
 	Additionals []*DNSRecord
+}
+
+// encode the DNS message to bytes
+func (m *DNSMessage) Encode(w io.Writer) error {
+	return nil
 }
 
 // Header
