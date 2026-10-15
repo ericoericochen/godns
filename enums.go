@@ -37,11 +37,11 @@ var typeNameMap map[Type]string = map[Type]string{
 type Class uint8
 
 const (
-	ClassIN  = 1
-	ClassCS  = 2
-	ClassCH  = 3
-	ClassHS  = 4
-	ClassANY = 255
+	ClassIN  Class = 1
+	ClassCS        = 2
+	ClassCH        = 3
+	ClassHS        = 4
+	ClassANY       = 255
 )
 
 var classNameMap map[Class]string = map[Class]string{
