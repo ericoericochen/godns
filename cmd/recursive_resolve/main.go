@@ -27,6 +27,7 @@ func main() {
 	})
 
 	res, err := resolver.Query(message)
+	fmt.Println("------")
 	fmt.Println(err)
 
 	// fmt.Println(res.Header)

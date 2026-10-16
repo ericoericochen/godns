@@ -1,0 +1,118 @@
+recursive resolve
+resolving query against nameserver: 192.203.230.10
+received response
+DNSMessage {
+	Header { ID: 2, QR: true, OPCODE: 0, AA: false, TC: true, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 0, NSCOUNT: 13, ARCOUNT: 11 }
+	Questions {
+		Question { QNAME: www.google.com., QTYPE: A, QCLASS: IN }
+	}
+	Answers{
+	}
+	Authorities {
+		Record { NAME: com., TYPE: NS, CLASS: IN, TTL: 172800, RDATA: a.gtld-servers.net. }
+		Record { NAME: com., TYPE: NS, CLASS: IN, TTL: 172800, RDATA: b.gtld-servers.net. }
+		Record { NAME: com., TYPE: NS, CLASS: IN, TTL: 172800, RDATA: c.gtld-servers.net. }
+		Record { NAME: com., TYPE: NS, CLASS: IN, TTL: 172800, RDATA: d.gtld-servers.net. }
+		Record { NAME: com., TYPE: NS, CLASS: IN, TTL: 172800, RDATA: e.gtld-servers.net. }
+		Record { NAME: com., TYPE: NS, CLASS: IN, TTL: 172800, RDATA: f.gtld-servers.net. }
+		Record { NAME: com., TYPE: NS, CLASS: IN, TTL: 172800, RDATA: g.gtld-servers.net. }
+		Record { NAME: com., TYPE: NS, CLASS: IN, TTL: 172800, RDATA: h.gtld-servers.net. }
+		Record { NAME: com., TYPE: NS, CLASS: IN, TTL: 172800, RDATA: i.gtld-servers.net. }
+		Record { NAME: com., TYPE: NS, CLASS: IN, TTL: 172800, RDATA: j.gtld-servers.net. }
+		Record { NAME: com., TYPE: NS, CLASS: IN, TTL: 172800, RDATA: k.gtld-servers.net. }
+		Record { NAME: com., TYPE: NS, CLASS: IN, TTL: 172800, RDATA: l.gtld-servers.net. }
+		Record { NAME: com., TYPE: NS, CLASS: IN, TTL: 172800, RDATA: m.gtld-servers.net. }
+	}
+	Additionals {
+		Record { NAME: a.gtld-servers.net., TYPE: A, CLASS: IN, TTL: 172800, RDATA: 192.5.6.30 }
+		Record { NAME: a.gtld-servers.net., TYPE: AAAA, CLASS: IN, TTL: 172800, RDATA: 2001:503:a83e::2:30 }
+		Record { NAME: b.gtld-servers.net., TYPE: A, CLASS: IN, TTL: 172800, RDATA: 192.33.14.30 }
+		Record { NAME: b.gtld-servers.net., TYPE: AAAA, CLASS: IN, TTL: 172800, RDATA: 2001:503:231d::2:30 }
+		Record { NAME: c.gtld-servers.net., TYPE: A, CLASS: IN, TTL: 172800, RDATA: 192.26.92.30 }
+		Record { NAME: c.gtld-servers.net., TYPE: AAAA, CLASS: IN, TTL: 172800, RDATA: 2001:503:83eb::30 }
+		Record { NAME: d.gtld-servers.net., TYPE: A, CLASS: IN, TTL: 172800, RDATA: 192.31.80.30 }
+		Record { NAME: d.gtld-servers.net., TYPE: AAAA, CLASS: IN, TTL: 172800, RDATA: 2001:500:856e::30 }
+		Record { NAME: e.gtld-servers.net., TYPE: A, CLASS: IN, TTL: 172800, RDATA: 192.12.94.30 }
+		Record { NAME: e.gtld-servers.net., TYPE: AAAA, CLASS: IN, TTL: 172800, RDATA: 2001:502:1ca1::30 }
+		Record { NAME: f.gtld-servers.net., TYPE: A, CLASS: IN, TTL: 172800, RDATA: 192.35.51.30 }
+	}
+}
+did not receive answer
+referral nameserver:  a.gtld-servers.net.
+found ip address of  a.gtld-servers.net. = 192.5.6.30
+----
+resolving query against nameserver: 192.5.6.30
+received response
+DNSMessage {
+	Header { ID: 2, QR: true, OPCODE: 0, AA: false, TC: false, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 0, NSCOUNT: 4, ARCOUNT: 8 }
+	Questions {
+		Question { QNAME: www.google.com., QTYPE: A, QCLASS: IN }
+	}
+	Answers{
+	}
+	Authorities {
+		Record { NAME: google.com., TYPE: NS, CLASS: IN, TTL: 172800, RDATA: ns2.google.com. }
+		Record { NAME: google.com., TYPE: NS, CLASS: IN, TTL: 172800, RDATA: ns1.google.com. }
+		Record { NAME: google.com., TYPE: NS, CLASS: IN, TTL: 172800, RDATA: ns3.google.com. }
+		Record { NAME: google.com., TYPE: NS, CLASS: IN, TTL: 172800, RDATA: ns4.google.com. }
+	}
+	Additionals {
+		Record { NAME: ns2.google.com., TYPE: AAAA, CLASS: IN, TTL: 172800, RDATA: 2001:4860:4802:34::a }
+		Record { NAME: ns2.google.com., TYPE: A, CLASS: IN, TTL: 172800, RDATA: 216.239.34.10 }
+		Record { NAME: ns1.google.com., TYPE: AAAA, CLASS: IN, TTL: 172800, RDATA: 2001:4860:4802:32::a }
+		Record { NAME: ns1.google.com., TYPE: A, CLASS: IN, TTL: 172800, RDATA: 216.239.32.10 }
+		Record { NAME: ns3.google.com., TYPE: AAAA, CLASS: IN, TTL: 172800, RDATA: 2001:4860:4802:36::a }
+		Record { NAME: ns3.google.com., TYPE: A, CLASS: IN, TTL: 172800, RDATA: 216.239.36.10 }
+		Record { NAME: ns4.google.com., TYPE: AAAA, CLASS: IN, TTL: 172800, RDATA: 2001:4860:4802:38::a }
+		Record { NAME: ns4.google.com., TYPE: A, CLASS: IN, TTL: 172800, RDATA: 216.239.38.10 }
+	}
+}
+did not receive answer
+referral nameserver:  ns2.google.com.
+found ip address of  ns2.google.com. = 216.239.34.10
+----
+resolving query against nameserver: 216.239.34.10
+received response
+DNSMessage {
+	Header { ID: 2, QR: true, OPCODE: 0, AA: true, TC: false, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 8, NSCOUNT: 0, ARCOUNT: 0 }
+	Questions {
+		Question { QNAME: www.google.com., QTYPE: A, QCLASS: IN }
+	}
+	Answers{
+		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.155.119 }
+		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.156.119 }
+		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.150.119 }
+		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.152.119 }
+		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.153.119 }
+		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.157.119 }
+		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.151.119 }
+		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.154.119 }
+	}
+	Authorities {
+	}
+	Additionals {
+	}
+}
+received answer
+------
+<nil>
+DNSMessage {
+	Header { ID: 2, QR: true, OPCODE: 0, AA: true, TC: false, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 8, NSCOUNT: 0, ARCOUNT: 0 }
+	Questions {
+		Question { QNAME: www.google.com., QTYPE: A, QCLASS: IN }
+	}
+	Answers{
+		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.155.119 }
+		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.156.119 }
+		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.150.119 }
+		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.152.119 }
+		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.153.119 }
+		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.157.119 }
+		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.151.119 }
+		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.154.119 }
+	}
+	Authorities {
+	}
+	Additionals {
+	}
+}
