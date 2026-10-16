@@ -115,38 +115,55 @@ func (p *DNSMessageParser) Parse(dest *DNSMessage) error {
 
 // parse the name starting from the current idx
 func (p *DNSMessageParser) parseName() (string, error) {
+	name, idx, err := p.parseNameFrom(p.idx)
+	if err != nil {
+		return "", err
+	}
+	p.idx = idx
+	return name, err
+}
+
+// parse the name starting from `idx`
+func (p *DNSMessageParser) parseNameFrom(idx int) (string, int, error) {
 	name := ""
-	offset := p.idx
-	for p.buffer[p.idx] != byte(0) {
+	initialOffset := idx
+	for p.buffer[idx] != byte(0) {
 		// is label or message compression pointer
-		first := p.buffer[p.idx]
+		first := p.buffer[idx]
 		if isLabelByte(first) {
 			length := int(first)
-			start := p.idx + 1
+			start := idx + 1
 			end := start + length
 			domain := string(p.buffer[start:end])
 			name += domain + "."
-			p.idx = end
+			idx = end
 		} else if isMessagePointerByte(first) {
-			p.idx += 1
+			idx += 1
 			offset := binary.BigEndian.Uint16([]byte{
 				first & byte(0b00111111),
-				p.buffer[p.idx],
+				p.buffer[idx],
 			})
 			domain, exists := p.offsetsToName[int(offset)]
-			if !exists {
-				return "", MalformedDNSMessageError
+			if exists {
+				name += domain
+			} else {
+				// recursively read name from offset
+				domain, _, err := p.parseNameFrom(int(offset))
+				if err != nil {
+					return "", 0, MalformedDNSMessageError
+				}
+				name += domain
 			}
-			name += domain
+
 			break
 		}
 	}
 
-	p.offsetsToName[offset] = name
+	p.offsetsToName[initialOffset] = name
 
 	// advance idx by 1 to segment after name
-	p.idx += 1
-	return name, nil
+	idx += 1
+	return name, idx, nil
 }
 
 func isLabelByte(b byte) bool {
