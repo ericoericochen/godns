@@ -21,9 +21,8 @@ func (r *DNSRecursiveResolver) Query(message *DNSMessage) (*DNSMessage, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(res)
 
-	return nil, nil
+	return res, nil
 }
 
 func (r *DNSRecursiveResolver) send(server string, message *DNSMessage) (*DNSMessage, error) {
@@ -52,7 +51,6 @@ func (r *DNSRecursiveResolver) send(server string, message *DNSMessage) (*DNSMes
 
 	// parse dns message from buffer
 	responseBuffer = responseBuffer[:n]
-	fmt.Println(responseBuffer)
 	parser := NewDNSMessageParser(responseBuffer)
 	dnsMessage := DNSMessage{}
 	err = parser.Parse(&dnsMessage)
@@ -60,7 +58,5 @@ func (r *DNSRecursiveResolver) send(server string, message *DNSMessage) (*DNSMes
 		return nil, err
 	}
 
-	fmt.Println(dnsMessage)
-
-	return nil, nil
+	return &dnsMessage, nil
 }

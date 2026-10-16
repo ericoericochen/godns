@@ -19,7 +19,6 @@ func main() {
 	var id uint16 = 2
 	message.Header.ID = id
 	message.Header.QR = false
-	message.Header.RecursionDesired = true
 	message.Header.Qdcount = 1
 	message.Questions = append(message.Questions, &godns.DNSQuestion{
 		Qname:  qname,
@@ -28,5 +27,10 @@ func main() {
 	})
 
 	res, err := resolver.Query(message)
-	fmt.Println(res, err)
+	fmt.Println(err)
+
+	// fmt.Println(res.Header)
+	// fmt.Println(res.Questions[0])
+	// fmt.Println(res.Authorities[0])
+	fmt.Println(res)
 }

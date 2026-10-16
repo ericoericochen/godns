@@ -15,10 +15,20 @@ type ResponseCode uint8
 const (
 	ResponseCodeNoError ResponseCode = iota
 	ResponseCodeFormatError
+	ResponseCodeServerFailure
 	ResponseCodeNameError
 	ResponseCodeNotImplemented
 	ResponseCodeRefused
 )
+
+var responseCodeMap map[ResponseCode]string = map[ResponseCode]string{
+	ResponseCodeNoError:        "NOERROR",
+	ResponseCodeFormatError:    "FORMERR",
+	ResponseCodeServerFailure:  "SERVFAIL",
+	ResponseCodeNameError:      "NXDOMAIN",
+	ResponseCodeNotImplemented: "NOTIMP",
+	ResponseCodeRefused:        "REFUSED",
+}
 
 // TYPE, QTYPE
 type Type uint8

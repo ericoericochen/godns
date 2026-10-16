@@ -73,10 +73,39 @@ type DNSHeader struct {
 }
 
 func (header *DNSHeader) String() string {
-	return fmt.Sprintf(`DNSHeader { ID: %v, QR: %v, OPCODE: %v }`, header.ID, header.QR, header.Opcode)
+	return fmt.Sprintf(`DNSHeader {
+	ID: %v,
+	QR: %v,
+	OPCODE: %v,
+	AA: %v,
+	TC: %v,
+	RD: %v,
+	RA: %v,
+	Z: %v,
+	RCODE: %v,
+	QDCOUNT: %v,
+	ANCOUNT: %v,
+	NSCOUNT: %v,
+	ARCOUNT: %v,
+}`,
+		header.ID, header.QR, header.Opcode, header.AuthoritativeAnswer, header.Truncation,
+		header.RecursionDesired, header.RecursionAvailable, header.Z, responseCodeMap[header.ResponseCode],
+		header.Qdcount, header.Ancount, header.Nscount, header.Arcount)
 }
 
 // Question Section
+
+//                                1  1  1  1  1  1
+//  0  1  2  3  4  5  6  7  8  9  0  1  2  3  4  5
+// +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+// |                                               |
+// /                     QNAME                     /
+// /                                               /
+// +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+// |                     QTYPE                     |
+// +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
+// |                     QCLASS                    |
+// +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 
 type DNSQuestion struct {
 	Qname  string
@@ -85,7 +114,11 @@ type DNSQuestion struct {
 }
 
 func (q *DNSQuestion) String() string {
-	return fmt.Sprintf(`DNSQuestion { QNAME: %v, QTYPE: %v, QCLASS: %v }`,
+	return fmt.Sprintf(`DNSQuestion {
+	QNAME: %v,
+	QTYPE: %v,
+	QCLASS: %v
+}`,
 		q.Qname, typeNameMap[q.Qtype], classNameMap[q.Qclass])
 }
 
@@ -121,7 +154,13 @@ type DNSRecord struct {
 }
 
 func (r *DNSRecord) String() string {
-	return fmt.Sprintf(`DNSRecord { NAME: %v, TYPE: %v, CLASS: %v, TTL: %v, RDATA: %v }`,
+	return fmt.Sprintf(`DNSRecord {
+	NAME: %v,
+	TYPE: %v,
+	CLASS: %v,
+	TTL: %v,
+	RDATA: %v
+}`,
 		r.Name, typeNameMap[r.Type], classNameMap[r.Class], r.TTL, r.RData)
 }
 
