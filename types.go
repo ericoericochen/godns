@@ -36,6 +36,39 @@ func NewDNSMessage() *DNSMessage {
 	}
 }
 
+func (m *DNSMessage) String() string {
+	s := "DNSMessage {\n"
+	// header
+	s += "\t" + m.Header.String() + "\n"
+	// questions
+	s += "\t" + "Questions {" + "\n"
+	for _, question := range m.Questions {
+		s += "\t\t" + question.String() + "\n"
+	}
+	s += "\t}\n"
+	// answers
+	s += "\tAnswers{\n"
+	for _, answer := range m.Answers {
+		s += "\t\t" + answer.String() + "\n"
+	}
+	s += "\t}\n"
+	// authorities
+	s += "\tAuthorities {\n"
+	for _, record := range m.Authorities {
+		s += "\t\t" + record.String() + "\n"
+	}
+	s += "\t}\n"
+	// additionals
+	s += "\tAdditionals {\n"
+	for _, record := range m.Additionals {
+		s += "\t\t" + record.String() + "\n"
+	}
+	s += "\t}\n"
+
+	s += "}"
+	return s
+}
+
 // Header
 
 /**
@@ -73,21 +106,7 @@ type DNSHeader struct {
 }
 
 func (header *DNSHeader) String() string {
-	return fmt.Sprintf(`DNSHeader {
-	ID: %v,
-	QR: %v,
-	OPCODE: %v,
-	AA: %v,
-	TC: %v,
-	RD: %v,
-	RA: %v,
-	Z: %v,
-	RCODE: %v,
-	QDCOUNT: %v,
-	ANCOUNT: %v,
-	NSCOUNT: %v,
-	ARCOUNT: %v,
-}`,
+	return fmt.Sprintf(`Header { ID: %v, QR: %v, OPCODE: %v, AA: %v, TC: %v, RD: %v, RA: %v, Z: %v, RCODE: %v, QDCOUNT: %v, ANCOUNT: %v, NSCOUNT: %v, ARCOUNT: %v }`,
 		header.ID, header.QR, header.Opcode, header.AuthoritativeAnswer, header.Truncation,
 		header.RecursionDesired, header.RecursionAvailable, header.Z, responseCodeMap[header.ResponseCode],
 		header.Qdcount, header.Ancount, header.Nscount, header.Arcount)
@@ -114,11 +133,7 @@ type DNSQuestion struct {
 }
 
 func (q *DNSQuestion) String() string {
-	return fmt.Sprintf(`DNSQuestion {
-	QNAME: %v,
-	QTYPE: %v,
-	QCLASS: %v
-}`,
+	return fmt.Sprintf(`Question { QNAME: %v, QTYPE: %v, QCLASS: %v }`,
 		q.Qname, typeNameMap[q.Qtype], classNameMap[q.Qclass])
 }
 
@@ -154,13 +169,7 @@ type DNSRecord struct {
 }
 
 func (r *DNSRecord) String() string {
-	return fmt.Sprintf(`DNSRecord {
-	NAME: %v,
-	TYPE: %v,
-	CLASS: %v,
-	TTL: %v,
-	RDATA: %v
-}`,
+	return fmt.Sprintf(`Record { NAME: %v, TYPE: %v, CLASS: %v, TTL: %v, RDATA: %v }`,
 		r.Name, typeNameMap[r.Type], classNameMap[r.Class], r.TTL, r.RData)
 }
 
