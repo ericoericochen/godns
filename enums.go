@@ -34,13 +34,15 @@ var responseCodeMap map[ResponseCode]string = map[ResponseCode]string{
 type Type uint8
 
 const (
-	TypeA  Type = 1
-	TypeNS      = 2
+	TypeA    Type = 1
+	TypeNS        = 2
+	TypeAAAA      = 28
 )
 
 var typeNameMap map[Type]string = map[Type]string{
-	TypeA:  "A",
-	TypeNS: "NS",
+	TypeA:    "A",
+	TypeNS:   "NS",
+	TypeAAAA: "AAAA",
 }
 
 // CLASS, QCLASS

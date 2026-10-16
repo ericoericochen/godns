@@ -3,11 +3,11 @@ package godns
 import (
 	"encoding/binary"
 	"errors"
-	"fmt"
-	"strings"
+	"net/netip"
 )
 
 var MalformedDNSMessageError = errors.New("Malformed DNS Message")
+var MalformedRDataError = errors.New("Malformed RData")
 
 type DNSMessageParser struct {
 	buffer        []byte // dns message bytes
@@ -88,10 +88,31 @@ func (p *DNSMessageParser) Parse(dest *DNSMessage) error {
 		class := Class(binary.BigEndian.Uint16(buffer[p.idx+2 : p.idx+4]))
 		ttl := binary.BigEndian.Uint32(buffer[p.idx+4 : p.idx+8])
 		rdlength := binary.BigEndian.Uint16(buffer[p.idx+8 : p.idx+10])
-
-		// assume IN and A
 		rdataBuffer := buffer[p.idx+10 : p.idx+10+int(rdlength)]
-		rdata := parseIPv4Address(rdataBuffer)
+
+		var rdata string
+		if recordType == TypeA {
+			rdata, err = parseIPv4Address(rdataBuffer)
+		} else if recordType == TypeNS {
+			// clean this up later
+			rd, end, err := p.parseNameFrom(p.idx + 10)
+			if err != nil {
+				return err
+			}
+			// name exceeded rdlength
+			if end != p.idx+10+int(rdlength) {
+				return MalformedDNSMessageError
+			}
+			rdata = rd
+
+		} else if recordType == TypeAAAA {
+			rdata, err = parseIPv6Address(rdataBuffer)
+		}
+
+		if err != nil {
+			return err
+		}
+
 		record := &DNSRecord{
 			Name:  name,
 			Type:  recordType,
@@ -174,12 +195,20 @@ func isMessagePointerByte(b byte) bool {
 	return b == byte(0b11000000)
 }
 
-func parseIPv4Address(buffer []byte) string {
-	nums := []string{}
-	for _, b := range buffer {
-		nums = append(nums, fmt.Sprintf("%v", b))
+func parseIPv4Address(buffer []byte) (string, error) {
+	if len(buffer) != 4 {
+		return "", MalformedRDataError
 	}
-	return strings.Join(nums, ".")
+	ipv4 := netip.AddrFrom4([4]byte(buffer))
+	return ipv4.String(), nil
+}
+
+func parseIPv6Address(buffer []byte) (string, error) {
+	if len(buffer) != 16 {
+		return "", MalformedRDataError
+	}
+	ipv6 := netip.AddrFrom16([16]byte(buffer))
+	return ipv6.String(), nil
 }
 
 // parse the qname
