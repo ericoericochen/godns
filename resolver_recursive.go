@@ -4,15 +4,15 @@ import (
 	"fmt"
 )
 
-type DNSRecursiveResolver struct {
+type RecursiveResolver struct {
 	rootNameServer string
 }
 
-func NewDNSRecursiveResolver(rootNameServer string) *DNSRecursiveResolver {
-	return &DNSRecursiveResolver{rootNameServer: rootNameServer}
+func NewRecursiveResolver(rootNameServer string) *RecursiveResolver {
+	return &RecursiveResolver{rootNameServer: rootNameServer}
 }
 
-func (r *DNSRecursiveResolver) Query(message *DNSMessage) (*DNSMessage, error) {
+func (r *RecursiveResolver) Query(message *DnsMessage) (*DnsMessage, error) {
 	res, err := r.resolve(message)
 	if err != nil {
 		return nil, err
@@ -21,15 +21,19 @@ func (r *DNSRecursiveResolver) Query(message *DNSMessage) (*DNSMessage, error) {
 	return res, nil
 }
 
-func (r *DNSRecursiveResolver) resolve(message *DNSMessage) (*DNSMessage, error) {
+func (r *RecursiveResolver) Resolve(name string, qtype Type, qclass Class) {
+
+}
+
+func (r *RecursiveResolver) resolve(message *DnsMessage) (*DnsMessage, error) {
 	var err error
-	var res *DNSMessage
+	var res *DnsMessage
 
 	serverIP := r.rootNameServer
 
 	for {
 		fmt.Println(fmt.Sprintf("resolving query against nameserver: %v", serverIP))
-		res, err = sendDNSMessage(serverIP, UDP_PORT, message)
+		res, err = sendDnsMessage(serverIP, UDP_PORT, message)
 		if err != nil {
 			return nil, err
 		}

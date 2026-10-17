@@ -1,10 +1,9 @@
-recursive resolve
 resolving query against nameserver: 192.203.230.10
 received response
 DNSMessage {
 	Header { ID: 2, QR: true, OPCODE: 0, AA: false, TC: true, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 0, NSCOUNT: 13, ARCOUNT: 11 }
 	Questions {
-		Question { QNAME: www.google.com., QTYPE: A, QCLASS: IN }
+		Question { QNAME: google.com., QTYPE: A, QCLASS: IN }
 	}
 	Answers{
 	}
@@ -46,7 +45,7 @@ received response
 DNSMessage {
 	Header { ID: 2, QR: true, OPCODE: 0, AA: false, TC: false, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 0, NSCOUNT: 4, ARCOUNT: 8 }
 	Questions {
-		Question { QNAME: www.google.com., QTYPE: A, QCLASS: IN }
+		Question { QNAME: google.com., QTYPE: A, QCLASS: IN }
 	}
 	Answers{
 	}
@@ -74,19 +73,12 @@ found ip address of  ns2.google.com. = 216.239.34.10
 resolving query against nameserver: 216.239.34.10
 received response
 DNSMessage {
-	Header { ID: 2, QR: true, OPCODE: 0, AA: true, TC: false, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 8, NSCOUNT: 0, ARCOUNT: 0 }
+	Header { ID: 2, QR: true, OPCODE: 0, AA: true, TC: false, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 1, NSCOUNT: 0, ARCOUNT: 0 }
 	Questions {
-		Question { QNAME: www.google.com., QTYPE: A, QCLASS: IN }
+		Question { QNAME: google.com., QTYPE: A, QCLASS: IN }
 	}
 	Answers{
-		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.155.119 }
-		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.156.119 }
-		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.150.119 }
-		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.152.119 }
-		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.153.119 }
-		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.157.119 }
-		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.151.119 }
-		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.154.119 }
+		Record { NAME: google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.250.65.78 }
 	}
 	Authorities {
 	}
@@ -97,19 +89,12 @@ received answer
 ------
 <nil>
 DNSMessage {
-	Header { ID: 2, QR: true, OPCODE: 0, AA: true, TC: false, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 8, NSCOUNT: 0, ARCOUNT: 0 }
+	Header { ID: 2, QR: true, OPCODE: 0, AA: true, TC: false, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 1, NSCOUNT: 0, ARCOUNT: 0 }
 	Questions {
-		Question { QNAME: www.google.com., QTYPE: A, QCLASS: IN }
+		Question { QNAME: google.com., QTYPE: A, QCLASS: IN }
 	}
 	Answers{
-		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.155.119 }
-		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.156.119 }
-		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.150.119 }
-		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.152.119 }
-		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.153.119 }
-		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.157.119 }
-		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.151.119 }
-		Record { NAME: www.google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.251.154.119 }
+		Record { NAME: google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.250.65.78 }
 	}
 	Authorities {
 	}

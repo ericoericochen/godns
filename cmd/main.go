@@ -18,7 +18,7 @@ func main() {
 	}
 
 	// parse into DNS message
-	message := &godns.DNSMessage{}
+	message := &godns.DnsMessage{}
 	parser := godns.NewDNSMessageParser(data)
 	err = parser.Parse(message)
 

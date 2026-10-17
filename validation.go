@@ -1,6 +1,6 @@
 package godns
 
-func ValidateQueryDNSMessage(message *DNSMessage) bool {
+func ValidateQueryDNSMessage(message *DnsMessage) bool {
 	if message.Header.QR {
 		return false
 	}

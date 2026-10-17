@@ -8,8 +8,8 @@ import (
 
 func main() {
 	rootNameServer := "192.203.230.10"
-	resolver := godns.NewDNSRecursiveResolver(rootNameServer)
-	qname := "www.google.com"
+	resolver := godns.NewRecursiveResolver(rootNameServer)
+	qname := "google.com"
 	qtype := godns.TypeA
 	qclass := godns.ClassIN
 

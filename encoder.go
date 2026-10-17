@@ -7,7 +7,7 @@ import (
 )
 
 type DNSMessageEncoder struct {
-	message *DNSMessage
+	message *DnsMessage
 }
 
 func (e *DNSMessageEncoder) Write(w io.Writer) error {

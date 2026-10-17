@@ -8,7 +8,7 @@ import (
 
 const UDP_PORT = 53
 
-func sendDNSMessage(serverIP string, port int, message *DNSMessage) (*DNSMessage, error) {
+func sendDnsMessage(serverIP string, port int, message *DnsMessage) (*DnsMessage, error) {
 	// connect to udp
 	conn, err := net.Dial("udp", fmt.Sprintf("%v:%v", serverIP, port))
 	if err != nil {
@@ -36,7 +36,7 @@ func sendDNSMessage(serverIP string, port int, message *DNSMessage) (*DNSMessage
 	// parse dns message from buffer
 	responseBuffer = responseBuffer[:n]
 	parser := NewDNSMessageParser(responseBuffer)
-	response := DNSMessage{}
+	response := DnsMessage{}
 	err = parser.Parse(&response)
 	if err != nil {
 		return nil, err

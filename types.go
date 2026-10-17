@@ -18,7 +18,7 @@ import (
 +---------------------+
 */
 
-type DNSMessage struct {
+type DnsMessage struct {
 	Header      *DNSHeader
 	Questions   []*DNSQuestion
 	Answers     []*DNSRecord
@@ -26,8 +26,8 @@ type DNSMessage struct {
 	Additionals []*DNSRecord
 }
 
-func NewDNSMessage() *DNSMessage {
-	return &DNSMessage{
+func NewDNSMessage() *DnsMessage {
+	return &DnsMessage{
 		Header:      &DNSHeader{},
 		Questions:   []*DNSQuestion{},
 		Answers:     []*DNSRecord{},
@@ -36,8 +36,8 @@ func NewDNSMessage() *DNSMessage {
 	}
 }
 
-func (m *DNSMessage) String() string {
-	s := "DNSMessage {\n"
+func (m *DnsMessage) String() string {
+	s := "DnsMessage {\n"
 	// header
 	s += "\t" + m.Header.String() + "\n"
 	// questions
