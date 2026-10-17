@@ -19,20 +19,22 @@ import (
 */
 
 type DnsMessage struct {
-	Header      *DNSHeader
-	Questions   []*DNSQuestion
-	Answers     []*DNSRecord
-	Authorities []*DNSRecord
-	Additionals []*DNSRecord
+	Header     *DNSHeader
+	Questions  []*DNSQuestion
+	Answers    []*DNSRecord
+	Authority  []*DNSRecord
+	Additional []*DNSRecord
 }
 
-func NewDNSMessage() *DnsMessage {
+func NewDnsMessage() *DnsMessage {
+	header := &DNSHeader{}
+	header.ID = generateTransactionID()
 	return &DnsMessage{
-		Header:      &DNSHeader{},
-		Questions:   []*DNSQuestion{},
-		Answers:     []*DNSRecord{},
-		Authorities: []*DNSRecord{},
-		Additionals: []*DNSRecord{},
+		Header:     header,
+		Questions:  []*DNSQuestion{},
+		Answers:    []*DNSRecord{},
+		Authority:  []*DNSRecord{},
+		Additional: []*DNSRecord{},
 	}
 }
 
@@ -54,13 +56,13 @@ func (m *DnsMessage) String() string {
 	s += "\t}\n"
 	// authorities
 	s += "\tAuthorities {\n"
-	for _, record := range m.Authorities {
+	for _, record := range m.Authority {
 		s += "\t\t" + record.String() + "\n"
 	}
 	s += "\t}\n"
 	// additionals
 	s += "\tAdditionals {\n"
-	for _, record := range m.Additionals {
+	for _, record := range m.Additional {
 		s += "\t\t" + record.String() + "\n"
 	}
 	s += "\t}\n"

@@ -6,6 +6,7 @@ import (
 
 type RecursiveResolver struct {
 	rootNameServer string
+	cache          *DnsCache
 }
 
 func NewRecursiveResolver(rootNameServer string) *RecursiveResolver {
@@ -21,8 +22,25 @@ func (r *RecursiveResolver) Query(message *DnsMessage) (*DnsMessage, error) {
 	return res, nil
 }
 
-func (r *RecursiveResolver) Resolve(name string, qtype Type, qclass Class) {
+func (r *RecursiveResolver) Resolve(qname string, qtype Type, qclass Class) (*DnsMessage, error) {
+	// build dns query message
+	message := NewDnsMessage()
+	message.Header.QR = false
+	message.Header.Opcode = OpcodeQUERY
+	message.Header.Qdcount = 1
+	message.Questions = append(message.Questions, &DNSQuestion{
+		Qname:  qname,
+		Qtype:  qtype,
+		Qclass: qclass,
+	})
 
+	// recursively resolve dns query and cache results
+	res, err := r.resolve(message)
+	if err != nil {
+		return nil, err
+	}
+
+	return res, nil
 }
 
 func (r *RecursiveResolver) resolve(message *DnsMessage) (*DnsMessage, error) {
@@ -43,13 +61,16 @@ func (r *RecursiveResolver) resolve(message *DnsMessage) (*DnsMessage, error) {
 		// did we receive the answer for the query
 		if len(res.Answers) > 0 {
 			fmt.Println("received answer")
+
+			// cache the response
+
 			break
 		}
 
 		fmt.Println("did not receive answer")
 
 		var referralNS string
-		for _, record := range res.Authorities {
+		for _, record := range res.Authority {
 			if record.Type == TypeNS {
 				referralNS = record.RData
 				break
@@ -59,7 +80,7 @@ func (r *RecursiveResolver) resolve(message *DnsMessage) (*DnsMessage, error) {
 		fmt.Println("referral nameserver: ", referralNS)
 
 		// find the ip address of the referral ns
-		for _, record := range res.Additionals {
+		for _, record := range res.Additional {
 			if record.Name == referralNS && record.Type == TypeA {
 				fmt.Println("found ip address of ", referralNS, "=", record.RData)
 				serverIP = record.RData

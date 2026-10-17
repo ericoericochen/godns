@@ -15,7 +15,7 @@ func main() {
 	qclass := godns.ClassIN
 
 	// build query dns message
-	message := godns.NewDNSMessage()
+	message := godns.NewDnsMessage()
 	id := uint16(rand.UintN(1 << 16))
 	// var id uint16 = 2
 	message.Header.ID = id

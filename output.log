@@ -1,7 +1,7 @@
 resolving query against nameserver: 192.203.230.10
 received response
-DNSMessage {
-	Header { ID: 2, QR: true, OPCODE: 0, AA: false, TC: true, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 0, NSCOUNT: 13, ARCOUNT: 11 }
+DnsMessage {
+	Header { ID: 8345, QR: true, OPCODE: 0, AA: false, TC: true, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 0, NSCOUNT: 13, ARCOUNT: 11 }
 	Questions {
 		Question { QNAME: google.com., QTYPE: A, QCLASS: IN }
 	}
@@ -42,8 +42,8 @@ found ip address of  a.gtld-servers.net. = 192.5.6.30
 ----
 resolving query against nameserver: 192.5.6.30
 received response
-DNSMessage {
-	Header { ID: 2, QR: true, OPCODE: 0, AA: false, TC: false, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 0, NSCOUNT: 4, ARCOUNT: 8 }
+DnsMessage {
+	Header { ID: 8345, QR: true, OPCODE: 0, AA: false, TC: false, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 0, NSCOUNT: 4, ARCOUNT: 8 }
 	Questions {
 		Question { QNAME: google.com., QTYPE: A, QCLASS: IN }
 	}
@@ -72,8 +72,8 @@ found ip address of  ns2.google.com. = 216.239.34.10
 ----
 resolving query against nameserver: 216.239.34.10
 received response
-DNSMessage {
-	Header { ID: 2, QR: true, OPCODE: 0, AA: true, TC: false, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 1, NSCOUNT: 0, ARCOUNT: 0 }
+DnsMessage {
+	Header { ID: 8345, QR: true, OPCODE: 0, AA: true, TC: false, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 1, NSCOUNT: 0, ARCOUNT: 0 }
 	Questions {
 		Question { QNAME: google.com., QTYPE: A, QCLASS: IN }
 	}
@@ -88,8 +88,8 @@ DNSMessage {
 received answer
 ------
 <nil>
-DNSMessage {
-	Header { ID: 2, QR: true, OPCODE: 0, AA: true, TC: false, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 1, NSCOUNT: 0, ARCOUNT: 0 }
+DnsMessage {
+	Header { ID: 8345, QR: true, OPCODE: 0, AA: true, TC: false, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 1, NSCOUNT: 0, ARCOUNT: 0 }
 	Questions {
 		Question { QNAME: google.com., QTYPE: A, QCLASS: IN }
 	}

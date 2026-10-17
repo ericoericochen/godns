@@ -26,7 +26,7 @@ func main() {
 		fmt.Println(record)
 	}
 	fmt.Println("---")
-	for _, record := range message.Additionals {
+	for _, record := range message.Additional {
 		fmt.Println(record)
 	}
 }

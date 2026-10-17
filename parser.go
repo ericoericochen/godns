@@ -128,8 +128,8 @@ func (p *DNSMessageParser) Parse(dest *DnsMessage) error {
 	dest.Header = dnsHeader
 	dest.Questions = questions
 	dest.Answers = records[:ancount]
-	dest.Authorities = records[ancount : ancount+nscount]
-	dest.Additionals = records[ancount+nscount:]
+	dest.Authority = records[ancount : ancount+nscount]
+	dest.Additional = records[ancount+nscount:]
 
 	return nil
 }

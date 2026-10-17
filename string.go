@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func DigFormat(message *DNSMessage) string {
+func DigFormat(message *DnsMessage) string {
 	var b strings.Builder
 	header := message.Header
 
@@ -50,8 +50,8 @@ func DigFormat(message *DNSMessage) string {
 		records []*DNSRecord
 	}{
 		{"ANSWER", message.Answers},
-		{"AUTHORITY", message.Authorities},
-		{"ADDITIONAL", message.Additionals},
+		{"AUTHORITY", message.Authority},
+		{"ADDITIONAL", message.Additional},
 	}
 
 	for _, section := range sections {

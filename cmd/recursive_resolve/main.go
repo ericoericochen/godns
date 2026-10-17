@@ -14,19 +14,20 @@ func main() {
 	qclass := godns.ClassIN
 
 	// build query dns message
-	message := godns.NewDNSMessage()
+	// message := godns.NewDNSMessage()
 	// id := uint16(rand.UintN(1 << 16))
-	var id uint16 = 2
-	message.Header.ID = id
-	message.Header.QR = false
-	message.Header.Qdcount = 1
-	message.Questions = append(message.Questions, &godns.DNSQuestion{
-		Qname:  qname,
-		Qtype:  qtype,
-		Qclass: qclass,
-	})
+	// var id uint16 = 2
+	// message.Header.ID = id
+	// message.Header.QR = false
+	// message.Header.Qdcount = 1
+	// message.Questions = append(message.Questions, &godns.DNSQuestion{
+	// 	Qname:  qname,
+	// 	Qtype:  qtype,
+	// 	Qclass: qclass,
+	// })
 
-	res, err := resolver.Query(message)
+	// res, err := resolver.Query(message)
+	res, err := resolver.Resolve(qname, qtype, qclass)
 	fmt.Println("------")
 	fmt.Println(err)
 

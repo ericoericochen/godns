@@ -16,7 +16,7 @@ func NewStubResolver(server string) *StubResolver {
 
 const port = 53
 
-func (r *StubResolver) Query(message *DNSMessage) (*DNSMessage, error) {
+func (r *StubResolver) Query(message *DnsMessage) (*DnsMessage, error) {
 	// connect to udp dns server
 	conn, err := net.Dial("udp", fmt.Sprintf("%v:%v", r.server, port))
 	if err != nil {
@@ -45,7 +45,7 @@ func (r *StubResolver) Query(message *DNSMessage) (*DNSMessage, error) {
 	// parse dns message from buffer
 	responseBuffer = responseBuffer[:n]
 	parser := NewDNSMessageParser(responseBuffer)
-	dnsMessage := DNSMessage{}
+	dnsMessage := DnsMessage{}
 	err = parser.Parse(&dnsMessage)
 	if err != nil {
 		return nil, err
