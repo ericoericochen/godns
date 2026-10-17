@@ -6,7 +6,7 @@ import (
 
 type RecursiveResolver struct {
 	rootNameServer string
-	cache          *DnsCache
+	cache          Cache[DnsCacheKey, DnsCacheValue]
 }
 
 func NewRecursiveResolver(rootNameServer string) *RecursiveResolver {
@@ -90,6 +90,9 @@ func (r *RecursiveResolver) resolve(message *DnsMessage) (*DnsMessage, error) {
 
 		fmt.Println("----")
 	}
+
+	// cache results
+	// r.cache.Put(DnsCacheKey{Qname: })
 
 	return res, err
 }

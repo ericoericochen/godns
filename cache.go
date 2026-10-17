@@ -6,19 +6,17 @@ import (
 )
 
 // interfaces
-type CacheKey interface {
-	Hash() string
+type ICacheEntry[T any] interface {
+	Timestamp() time.Time // timestamp of insertion
+	TTL() int32           // time to live
+	Value() T             // value of the cached data
+	Hits() uint32         // number of puts / gets for this cache entry
+	hit()                 // increment number of hits
 }
 
-type CacheEntry[T any] interface {
-	Value() T     // value of the cached data
-	Hits() uint32 // number of puts / gets for this cache entry
-	hit()         // increment number of hits
-}
-
-type Cache[K CacheKey, V any] interface {
-	Put(K, V)
-	Get(K) (V, bool)
+type Cache[K, V any] interface {
+	Put(K, V, *int32)
+	Get(K) (ICacheEntry[V], bool)
 	Evict(K)
 }
 
@@ -43,26 +41,30 @@ type DnsCacheValue struct {
 	Additional []*DNSRecord
 }
 
-type DnsCacheEntry struct {
+type CacheEntry[V any] struct {
 	timestamp time.Time // when the cache entry was added to the cache
 	ttl       int32
 	hits      int32
-	data      *DnsCacheValue
+	value     V
 }
 
-func (e *DnsCacheEntry) TTL() int32 {
+func (e *CacheEntry[V]) Value() V {
+	return e.value
+}
+
+func (e *CacheEntry[V]) TTL() int32 {
 	return e.ttl
 }
 
-func (e *DnsCacheEntry) Timestamp() time.Time {
+func (e *CacheEntry[V]) Timestamp() time.Time {
 	return e.timestamp
 }
 
-func (e *DnsCacheEntry) Hits() int32 {
+func (e *CacheEntry[V]) Hits() int32 {
 	return e.hits
 }
 
-func (e *DnsCacheEntry) hit() {
+func (e *CacheEntry[V]) hit() {
 	e.hits += 1
 }
 
@@ -70,20 +72,31 @@ func (e *DnsCacheEntry) hit() {
 type DnsCache struct {
 }
 
-// TTL cache
-type ttlCacheEntry[T any] interface {
-	CacheEntry[T]
-	TTL() int32
-	Timestamp() time.Time
+type randomCache[K comparable, V any] struct {
+	keyToEntry map[K]*CacheEntry[V]
 }
 
-type ttlCache struct{}
+func (c *randomCache[K, V]) Put(key K, value V, ttl *int32) {
+	var ttlValue int32
+	if ttl == nil {
+		ttlValue = -1
+	} else {
+		ttlValue = *ttl
+	}
+	entry := &CacheEntry[V]{
+		timestamp: time.Now(),
+		ttl:       ttlValue,
+		hits:      1,
+		value:     value,
+	}
+	c.keyToEntry[key] = entry
+}
 
-// cache implementations with different eviction policies
-type lruCache struct{}
+func (c *randomCache[K, V]) Get(key K) (*CacheEntry[V], bool) {
+	entry, exists := c.keyToEntry[key]
+	return entry, exists
+}
 
-type lfuCache struct{}
-
-type randomCache[K CacheKey, V any] struct {
-	// m map[]
+func (c *randomCache[K, V]) Evict(key K) {
+	delete(c.keyToEntry, key)
 }
