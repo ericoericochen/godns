@@ -19,22 +19,22 @@ import (
 */
 
 type DnsMessage struct {
-	Header     *DNSHeader
-	Questions  []*DNSQuestion
-	Answers    []*DNSRecord
-	Authority  []*DNSRecord
-	Additional []*DNSRecord
+	Header     *DnsHeader
+	Questions  []*DnsQuestion
+	Answers    []*DnsRecord
+	Authority  []*DnsRecord
+	Additional []*DnsRecord
 }
 
 func NewDnsMessage() *DnsMessage {
-	header := &DNSHeader{}
+	header := &DnsHeader{}
 	header.ID = generateTransactionID()
 	return &DnsMessage{
 		Header:     header,
-		Questions:  []*DNSQuestion{},
-		Answers:    []*DNSRecord{},
-		Authority:  []*DNSRecord{},
-		Additional: []*DNSRecord{},
+		Questions:  []*DnsQuestion{},
+		Answers:    []*DnsRecord{},
+		Authority:  []*DnsRecord{},
+		Additional: []*DnsRecord{},
 	}
 }
 
@@ -91,7 +91,7 @@ func (m *DnsMessage) String() string {
 +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 */
 
-type DNSHeader struct {
+type DnsHeader struct {
 	ID                  uint16       // (16-bit) identifier
 	QR                  bool         // (1-bit) 0 - query, 1 - response
 	Opcode              Opcode       // (4-bit) kind of query 0 - QUERY, 1 - IQUERY, 2 - STATUS
@@ -107,7 +107,7 @@ type DNSHeader struct {
 	Arcount             uint16       // (16-bit) number of resource records in addition records section
 }
 
-func (header *DNSHeader) String() string {
+func (header *DnsHeader) String() string {
 	return fmt.Sprintf(`Header { ID: %v, QR: %v, OPCODE: %v, AA: %v, TC: %v, RD: %v, RA: %v, Z: %v, RCODE: %v, QDCOUNT: %v, ANCOUNT: %v, NSCOUNT: %v, ARCOUNT: %v }`,
 		header.ID, header.QR, header.Opcode, header.AuthoritativeAnswer, header.Truncation,
 		header.RecursionDesired, header.RecursionAvailable, header.Z, responseCodeMap[header.ResponseCode],
@@ -128,13 +128,13 @@ func (header *DNSHeader) String() string {
 // |                     QCLASS                    |
 // +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 
-type DNSQuestion struct {
+type DnsQuestion struct {
 	Qname  string
 	Qtype  Type
 	Qclass Class
 }
 
-func (q *DNSQuestion) String() string {
+func (q *DnsQuestion) String() string {
 	return fmt.Sprintf(`Question { QNAME: %v, QTYPE: %v, QCLASS: %v }`,
 		q.Qname, typeNameMap[q.Qtype], classNameMap[q.Qclass])
 }
@@ -162,7 +162,7 @@ func (q *DNSQuestion) String() string {
 // /                                               /
 // +--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+--+
 
-type DNSRecord struct {
+type DnsRecord struct {
 	Name  string
 	Type  Type
 	Class Class
@@ -170,7 +170,7 @@ type DNSRecord struct {
 	RData string
 }
 
-func (r *DNSRecord) String() string {
+func (r *DnsRecord) String() string {
 	return fmt.Sprintf(`Record { NAME: %v, TYPE: %v, CLASS: %v, TTL: %v, RDATA: %v }`,
 		r.Name, typeNameMap[r.Type], classNameMap[r.Class], r.TTL, r.RData)
 }

@@ -47,7 +47,7 @@ func DigFormat(message *DnsMessage) string {
 
 	sections := []struct {
 		name    string
-		records []*DNSRecord
+		records []*DnsRecord
 	}{
 		{"ANSWER", message.Answers},
 		{"AUTHORITY", message.Authority},

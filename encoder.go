@@ -6,11 +6,11 @@ import (
 	"strings"
 )
 
-type DNSMessageEncoder struct {
+type DnsMessageEncoder struct {
 	message *DnsMessage
 }
 
-func (e *DNSMessageEncoder) Write(w io.Writer) error {
+func (e *DnsMessageEncoder) Write(w io.Writer) error {
 	err := e.writeHeader(w)
 	if err != nil {
 		return err
@@ -26,7 +26,7 @@ func (e *DNSMessageEncoder) Write(w io.Writer) error {
 	return nil
 }
 
-func (e *DNSMessageEncoder) writeHeader(w io.Writer) error {
+func (e *DnsMessageEncoder) writeHeader(w io.Writer) error {
 	b := []byte{}
 	header := e.message.Header
 	b = binary.BigEndian.AppendUint16(b, header.ID)
@@ -62,7 +62,7 @@ func (e *DNSMessageEncoder) writeHeader(w io.Writer) error {
 	return err
 }
 
-func (e *DNSMessageEncoder) writeQuestion(question *DNSQuestion, w io.Writer) error {
+func (e *DnsMessageEncoder) writeQuestion(question *DnsQuestion, w io.Writer) error {
 	// encode qname
 	b := []byte{}
 	names := strings.Split(question.Qname, ".")

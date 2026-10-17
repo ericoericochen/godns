@@ -9,21 +9,21 @@ import (
 var MalformedDNSMessageError = errors.New("Malformed DNS Message")
 var MalformedRDataError = errors.New("Malformed RData")
 
-type DNSMessageParser struct {
+type DnsMessageDecoder struct {
 	buffer        []byte // dns message bytes
 	idx           int    // cursor pointer
 	offsetsToName map[int]string
 }
 
-func NewDNSMessageParser(buffer []byte) *DNSMessageParser {
-	parser := &DNSMessageParser{}
+func NewDnsMessageDecoder(buffer []byte) *DnsMessageDecoder {
+	parser := &DnsMessageDecoder{}
 	parser.buffer = buffer
 	parser.idx = 0
 	parser.offsetsToName = map[int]string{}
 	return parser
 }
 
-func (p *DNSMessageParser) Parse(dest *DnsMessage) error {
+func (p *DnsMessageDecoder) Parse(dest *DnsMessage) error {
 	buffer := p.buffer
 
 	// parse dns header
@@ -41,7 +41,7 @@ func (p *DNSMessageParser) Parse(dest *DnsMessage) error {
 	ancount := binary.BigEndian.Uint16(buffer[6:8])
 	nscount := binary.BigEndian.Uint16(buffer[8:10])
 	arcount := binary.BigEndian.Uint16(buffer[10:12])
-	dnsHeader := &DNSHeader{}
+	dnsHeader := &DnsHeader{}
 	dnsHeader.ID = id
 	dnsHeader.QR = qr
 	dnsHeader.Opcode = Opcode(opcode)
@@ -57,7 +57,7 @@ func (p *DNSMessageParser) Parse(dest *DnsMessage) error {
 	dnsHeader.Arcount = arcount
 
 	// parse questions section
-	questions := []*DNSQuestion{}
+	questions := []*DnsQuestion{}
 	p.idx = 12
 	for i := 0; i < int(qdcount); i++ {
 		qname, err := p.parseName()
@@ -66,7 +66,7 @@ func (p *DNSMessageParser) Parse(dest *DnsMessage) error {
 		}
 		qtype := Type(binary.BigEndian.Uint16(buffer[p.idx : p.idx+2]))
 		qclass := Class(binary.BigEndian.Uint16(buffer[p.idx+2 : p.idx+4]))
-		question := &DNSQuestion{
+		question := &DnsQuestion{
 			Qname:  qname,
 			Qtype:  qtype,
 			Qclass: qclass,
@@ -77,7 +77,7 @@ func (p *DNSMessageParser) Parse(dest *DnsMessage) error {
 
 	// parse answer, authority, and additional sections
 	totalRecords := ancount + nscount + arcount
-	records := []*DNSRecord{}
+	records := []*DnsRecord{}
 
 	for i := 0; i < int(totalRecords); i++ {
 		name, err := p.parseName()
@@ -113,7 +113,7 @@ func (p *DNSMessageParser) Parse(dest *DnsMessage) error {
 			return err
 		}
 
-		record := &DNSRecord{
+		record := &DnsRecord{
 			Name:  name,
 			Type:  recordType,
 			Class: class,
@@ -135,7 +135,7 @@ func (p *DNSMessageParser) Parse(dest *DnsMessage) error {
 }
 
 // parse the name starting from the current idx
-func (p *DNSMessageParser) parseName() (string, error) {
+func (p *DnsMessageDecoder) parseName() (string, error) {
 	name, idx, err := p.parseNameFrom(p.idx)
 	if err != nil {
 		return "", err
@@ -145,7 +145,7 @@ func (p *DNSMessageParser) parseName() (string, error) {
 }
 
 // parse the name starting from `idx`
-func (p *DNSMessageParser) parseNameFrom(idx int) (string, int, error) {
+func (p *DnsMessageDecoder) parseNameFrom(idx int) (string, int, error) {
 	name := ""
 	initialOffset := idx
 	for p.buffer[idx] != byte(0) {
