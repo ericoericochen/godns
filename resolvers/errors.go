@@ -6,3 +6,8 @@ func formatErrorResponse(message godns.DnsMessage) godns.DnsMessage {
 	builder := godns.NewDnsMessageBuilder().From(message).Rcode(godns.RcodeFormatError)
 	return builder.Build()
 }
+
+func serverFailureErrorResponse(message godns.DnsMessage) godns.DnsMessage {
+	builder := godns.NewDnsMessageBuilder().From(message).Rcode(godns.RcodeServerFailure)
+	return builder.Build()
+}

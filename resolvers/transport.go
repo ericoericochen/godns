@@ -40,11 +40,8 @@ func SendDnsMessage(nameserverIp string, port int, message godns.DnsMessage) god
 
 	// send the dns message udp datagram
 	resBuffer, err := SendUDPDatagram(nameserverIp, port, datagram.Bytes())
-
-	// create message builder
-	builder := godns.NewDnsMessageBuilder().From(message)
 	if err != nil {
-		return builder.Rcode(godns.RcodeServerFailure).Build()
+		return serverFailureErrorResponse(message)
 	}
 
 	// parse dns message
@@ -52,7 +49,7 @@ func SendDnsMessage(nameserverIp string, port int, message godns.DnsMessage) god
 	decoder := godns.NewDnsMessageDecoder(resBuffer)
 	err = decoder.Decode(&res)
 	if err != nil {
-		return builder.Rcode(godns.RcodeServerFailure).Build()
+		return serverFailureErrorResponse(message)
 	}
 
 	return res
