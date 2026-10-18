@@ -2,16 +2,14 @@ package resolvers
 
 import (
 	"github.com/ericoericochen/godns"
-	"github.com/ericoericochen/godns/cache"
 )
 
 type StubResolver struct {
 	server string
-	cache  cache.DnsCache
 }
 
-func NewStubResolver(server string, cache cache.DnsCache) DnsResolver {
-	resolver := &StubResolver{server: server, cache: cache}
+func NewStubResolver(server string) DnsResolver {
+	resolver := &StubResolver{server: server}
 	return resolver
 }
 

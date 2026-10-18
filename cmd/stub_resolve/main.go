@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/ericoericochen/godns"
-	"github.com/ericoericochen/godns/cache"
 	"github.com/ericoericochen/godns/resolvers"
 )
 
@@ -15,10 +14,6 @@ func main() {
 	server := "1.1.1.1"
 	resolver := resolvers.NewStubResolver(
 		server,
-		cache.NewDnsCache(&cache.CacheOptions{
-			MaxSize:        1000,
-			EvictionPolicy: cache.Random,
-		}),
 	)
 	qname := "www.google.com"
 	qtype := godns.TypeA
@@ -28,7 +23,7 @@ func main() {
 	query := godns.NewDnsQuery(qname, qtype, qclass, true)
 
 	type resolveResult struct {
-		response *godns.DnsMessage
+		response godns.DnsMessage
 		err      error
 		latency  time.Duration
 	}
@@ -36,7 +31,7 @@ func main() {
 	results := make([]resolveResult, 3)
 	for i := range results {
 		start := time.Now()
-		results[i].response, results[i].err = resolver.Resolve(query)
+		results[i].response = resolver.Resolve(query)
 		results[i].latency = time.Since(start)
 	}
 

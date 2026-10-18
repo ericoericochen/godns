@@ -72,6 +72,9 @@ func (e *DnsMessageEncoder) writeQuestion(question DnsQuestion, w io.Writer) err
 	names := strings.Split(question.Qname, ".")
 	for _, name := range names {
 		length := len(name)
+		if length == 0 {
+			continue
+		}
 		label := []byte(name)
 		b = append(b, byte(length))
 		b = append(b, label...)
