@@ -2,14 +2,24 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"text/tabwriter"
+	"time"
 
 	"github.com/ericoericochen/godns"
-	"github.com/ericoericochen/godns/resolvers/stub"
+	"github.com/ericoericochen/godns/cache"
+	"github.com/ericoericochen/godns/resolvers"
 )
 
 func main() {
 	server := "1.1.1.1"
-	resolver := stub.New(server)
+	resolver := resolvers.NewStubResolver(
+		server,
+		cache.NewDnsCache(&cache.CacheOptions{
+			MaxSize:        1000,
+			EvictionPolicy: cache.Random,
+		}),
+	)
 	qname := "www.google.com"
 	qtype := godns.TypeA
 	qclass := godns.ClassIN
@@ -17,9 +27,36 @@ func main() {
 	// build query dns message
 	query := godns.NewDnsQuery(qname, qtype, qclass, true)
 
-	fmt.Println(query)
+	type resolveResult struct {
+		response *godns.DnsMessage
+		err      error
+		latency  time.Duration
+	}
 
-	res, err := resolver.Resolve(query)
-	fmt.Println(err)
-	fmt.Println(res)
+	results := make([]resolveResult, 3)
+	for i := range results {
+		start := time.Now()
+		results[i].response, results[i].err = resolver.Resolve(query)
+		results[i].latency = time.Since(start)
+	}
+
+	w := tabwriter.NewWriter(os.Stdout, 0, 4, 2, ' ', 0)
+	fmt.Fprintln(w, "REQUEST\tLATENCY\tSTATUS")
+	for i, result := range results {
+		status := "ok"
+		if result.err != nil {
+			status = result.err.Error()
+		}
+		fmt.Fprintf(w, "%d\t%s\t%s\n", i+1, result.latency, status)
+	}
+	w.Flush()
+
+	for i, result := range results {
+		fmt.Printf("\nResponse %d:\n", i+1)
+		if result.err != nil {
+			fmt.Printf("  error: %v\n", result.err)
+			continue
+		}
+		fmt.Println(result.response)
+	}
 }
