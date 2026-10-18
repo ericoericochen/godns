@@ -12,7 +12,7 @@ type StubResolver struct {
 	cache  cache.DnsCache
 }
 
-func NewStubResolver(server string, cache cache.DnsCache) godns.DnsResolver {
+func NewStubResolver(server string, cache cache.DnsCache) DnsResolver {
 	resolver := &StubResolver{server: server, cache: cache}
 	return resolver
 }
