@@ -17,7 +17,7 @@ dig @1.1.1.1 www.google.com A
 Plan
 
 - [x] Parse Binary DNS Message
-- [ ] Implement a Stub Resolver
-- [ ] Implement a Recursive Resolver
+- [x] Implement a Stub Resolver
+- [x] Implement a Recursive Resolver
 - [ ] Add DNS Cache to Resolvers
 - [ ] Implement DNS Server

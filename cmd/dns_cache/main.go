@@ -1,19 +1,13 @@
 package main
 
-import (
-	"fmt"
-
-	"github.com/ericoericochen/godns"
-)
-
 func main() {
 	// cache := godns.DnsCache{}
-	key := godns.DnsCacheKey{
-		Qname:  "google.com",
-		Qtype:  godns.TypeA,
-		Qclass: godns.ClassIN,
-	}
+	// key := godns.DnsCacheKey{
+	// 	Qname:  "google.com",
+	// 	Qtype:  godns.TypeA,
+	// 	Qclass: godns.ClassIN,
+	// }
 
-	fmt.Println(key)
-	fmt.Println(key.Hash())
+	// fmt.Println(key)
+	// fmt.Println(key.Hash())
 }

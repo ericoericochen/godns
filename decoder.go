@@ -23,7 +23,7 @@ func NewDnsMessageDecoder(buffer []byte) *DnsMessageDecoder {
 	return parser
 }
 
-func (p *DnsMessageDecoder) Parse(dest *DnsMessage) error {
+func (p *DnsMessageDecoder) Decode(dest *DnsMessage) error {
 	buffer := p.buffer
 
 	// parse dns header

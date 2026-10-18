@@ -10,6 +10,10 @@ type DnsMessageEncoder struct {
 	message *DnsMessage
 }
 
+func NewDnsMessageEncoder(message *DnsMessage) *DnsMessageEncoder {
+	return &DnsMessageEncoder{message: message}
+}
+
 func (e *DnsMessageEncoder) Write(w io.Writer) error {
 	err := e.writeHeader(w)
 	if err != nil {

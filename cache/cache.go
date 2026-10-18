@@ -1,5 +1,20 @@
 package cache
 
+import "time"
+
+type cacheEntry[V any] struct {
+	timestamp time.Time
+	ttl       int32
+	hits      int32
+	value     V
+}
+
+type Cache[K comparable, V any] interface {
+	Put(K, V, int32) // set k = v in cache with ttl
+	Get(K) V
+	Evict(K)
+}
+
 // package godns
 
 // import (

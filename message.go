@@ -38,6 +38,19 @@ func NewDnsMessage() *DnsMessage {
 	}
 }
 
+func NewDnsQuery(qname string, qtype Type, qclass Class, rd bool) *DnsMessage {
+	message := NewDnsMessage()
+	message.Header.Qdcount = 1
+	message.Header.RecursionDesired = rd
+	question := &DnsQuestion{
+		Qname:  qname,
+		Qtype:  qtype,
+		Qclass: qclass,
+	}
+	message.Questions = append(message.Questions, question)
+	return message
+}
+
 func (m *DnsMessage) String() string {
 	s := "DnsMessage {\n"
 	// header

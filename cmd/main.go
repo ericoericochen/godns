@@ -19,7 +19,7 @@ func main() {
 
 	// parse into DNS message
 	message := &godns.DnsMessage{}
-	parser := godns.NewDNSMessageParser(data)
+	parser := godns.NewDnsMessageDecoder(data)
 	err = parser.Parse(message)
 
 	for _, record := range message.Answers {

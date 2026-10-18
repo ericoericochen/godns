@@ -35,8 +35,8 @@ type Type uint8
 
 const (
 	TypeA    Type = 1
-	TypeNS        = 2
-	TypeAAAA      = 28
+	TypeNS   Type = 2
+	TypeAAAA Type = 28
 )
 
 var typeNameMap map[Type]string = map[Type]string{
