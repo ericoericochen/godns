@@ -31,8 +31,36 @@ func (b *DnsMessageBuilder) RecursionDesired(rd bool) *DnsMessageBuilder {
 	return b
 }
 
+func (b *DnsMessageBuilder) RecursionAvailable(ra bool) *DnsMessageBuilder {
+	b.message.Header.RecursionAvailable = ra
+	return b
+}
+
+func (b *DnsMessageBuilder) Response() *DnsMessageBuilder {
+	b.message.Header.QR = true
+	return b
+}
+
 func (b *DnsMessageBuilder) Rcode(rcode Rcode) *DnsMessageBuilder {
 	b.message.Header.Rcode = rcode
+	return b
+}
+
+func (b *DnsMessageBuilder) Answers(answers []DnsRecord) *DnsMessageBuilder {
+	b.message.Answers = answers
+	b.message.Header.Ancount = uint16(len(answers))
+	return b
+}
+
+func (b *DnsMessageBuilder) Authority(authority []DnsRecord) *DnsMessageBuilder {
+	b.message.Authority = authority
+	b.message.Header.Nscount = uint16(len(authority))
+	return b
+}
+
+func (b *DnsMessageBuilder) Additional(additional []DnsRecord) *DnsMessageBuilder {
+	b.message.Additional = additional
+	b.message.Header.Arcount = uint16(len(additional))
 	return b
 }
 

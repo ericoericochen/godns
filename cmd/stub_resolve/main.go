@@ -7,14 +7,10 @@ import (
 	"time"
 
 	"github.com/ericoericochen/godns"
-	"github.com/ericoericochen/godns/resolvers"
 )
 
 func main() {
-	server := "1.1.1.1"
-	resolver := resolvers.NewStubResolver(
-		server,
-	)
+	resolver := godns.NewStubResolver().WithCache(godns.NewDnsCache(1000))
 	qname := "www.google.com"
 	qtype := godns.TypeA
 	qclass := godns.ClassIN

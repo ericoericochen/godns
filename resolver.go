@@ -1,14 +1,17 @@
-package resolvers
+package godns
 
-import (
-	"errors"
+import "errors"
 
-	"github.com/ericoericochen/godns"
-)
+type DnsResolver interface {
+	WithCache(*DnsCache) DnsResolver
+	Resolve(DnsMessage) DnsMessage
+}
+
+// validation
 
 var InvalidDnsQueryError = errors.New("InvalidDnsQueryError")
 
-func validateQueryDnsMessage(message godns.DnsMessage) error {
+func validateQueryDnsMessage(message DnsMessage) error {
 	if message.Header.QR {
 		return InvalidDnsQueryError
 	}
@@ -30,4 +33,9 @@ func validateQueryDnsMessage(message godns.DnsMessage) error {
 	}
 
 	return nil
+}
+
+// errors
+func toResponse(message DnsMessage, rcode Rcode) DnsMessage {
+	return NewDnsMessageBuilder().From(message).Response().Rcode(rcode).Build()
 }
