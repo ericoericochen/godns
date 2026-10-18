@@ -1,8 +1,6 @@
 package resolvers
 
 import (
-	"bytes"
-
 	"github.com/ericoericochen/godns"
 	"github.com/ericoericochen/godns/cache"
 )
@@ -17,45 +15,28 @@ func NewStubResolver(server string, cache cache.DnsCache) DnsResolver {
 	return resolver
 }
 
-func (r *StubResolver) Resolve(message *godns.DnsMessage) (*godns.DnsMessage, error) {
+func (r *StubResolver) Resolve(message godns.DnsMessage) godns.DnsMessage {
 	// validate dns query message
-	err := godns.ValidateQueryDnsMessage(message)
+	err := validateQueryDnsMessage(message)
 	if err != nil {
-		return nil, err
+		return formatErrorResponse(message)
 	}
 
 	// check if response is cached
-	question := message.Questions[0]
-	cacheKey := cache.DnsCacheKey{
-		Qname:  question.Qname,
-		Qtype:  question.Qtype,
-		Qclass: question.Qclass,
-	}
-	cached, hit := r.cache.Get(cacheKey)
-	if hit {
-		res := cachedValueToResponseDnsMessage(message, cached)
-		res.Header.RecursionAvailable = true
-		return res, nil
-	}
-
-	// encode dns message to bytes
-	var buffer bytes.Buffer
-	encoder := godns.NewDnsMessageEncoder(message)
-	encoder.Write(&buffer)
+	// question := message.Questions[0]
+	// cacheKey := cache.DnsCacheKey{
+	// 	Qname:  question.Qname,
+	// 	Qtype:  question.Qtype,
+	// 	Qclass: question.Qclass,
+	// }
+	// cached, hit := r.cache.Get(cacheKey)
+	// if hit {
+	// 	res := cachedValueToResponseDnsMessage(message, cached)
+	// 	res.Header.RecursionAvailable = true
+	// 	return res, nil
+	// }
 
 	// send the dns message
-	res, err := godns.SendDnsMessage(r.server, godns.UDP_DNS_PORT, buffer.Bytes())
-	if err != nil {
-		return nil, err
-	}
-
-	// cache the response
-	cacheValue := cache.DnsCacheValue{
-		Answers:    res.Answers,
-		Authority:  res.Authority,
-		Additional: res.Additional,
-	}
-
-	r.cache.Put(cacheKey, cacheValue)
-	return res, err
+	res := SendDnsMessage(r.server, UDP_DNS_PORT, message)
+	return res
 }

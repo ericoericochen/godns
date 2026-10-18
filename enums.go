@@ -10,24 +10,24 @@ const (
 )
 
 // RCODE
-type ResponseCode uint8
+type Rcode uint8
 
 const (
-	ResponseCodeNoError ResponseCode = iota
-	ResponseCodeFormatError
-	ResponseCodeServerFailure
-	ResponseCodeNameError
-	ResponseCodeNotImplemented
-	ResponseCodeRefused
+	RcodeNoError Rcode = iota
+	RcodeFormatError
+	RcodeServerFailure
+	RcodeNameError
+	RcodeNotImplemented
+	RcodeRefused
 )
 
-var responseCodeMap map[ResponseCode]string = map[ResponseCode]string{
-	ResponseCodeNoError:        "NOERROR",
-	ResponseCodeFormatError:    "FORMERR",
-	ResponseCodeServerFailure:  "SERVFAIL",
-	ResponseCodeNameError:      "NXDOMAIN",
-	ResponseCodeNotImplemented: "NOTIMP",
-	ResponseCodeRefused:        "REFUSED",
+var rcodeMap map[Rcode]string = map[Rcode]string{
+	RcodeNoError:        "NOERROR",
+	RcodeFormatError:    "FORMERR",
+	RcodeServerFailure:  "SERVFAIL",
+	RcodeNameError:      "NXDOMAIN",
+	RcodeNotImplemented: "NOTIMP",
+	RcodeRefused:        "REFUSED",
 }
 
 // TYPE, QTYPE

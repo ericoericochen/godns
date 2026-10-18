@@ -7,10 +7,10 @@ import (
 )
 
 type DnsMessageEncoder struct {
-	message *DnsMessage
+	message DnsMessage
 }
 
-func NewDnsMessageEncoder(message *DnsMessage) *DnsMessageEncoder {
+func NewDnsMessageEncoder(message DnsMessage) *DnsMessageEncoder {
 	return &DnsMessageEncoder{message: message}
 }
 
@@ -66,7 +66,7 @@ func (e *DnsMessageEncoder) writeHeader(w io.Writer) error {
 	return err
 }
 
-func (e *DnsMessageEncoder) writeQuestion(question *DnsQuestion, w io.Writer) error {
+func (e *DnsMessageEncoder) writeQuestion(question DnsQuestion, w io.Writer) error {
 	// encode qname
 	b := []byte{}
 	names := strings.Split(question.Qname, ".")

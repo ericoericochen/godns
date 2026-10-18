@@ -41,7 +41,7 @@ func (p *DnsMessageDecoder) Decode(dest *DnsMessage) error {
 	ancount := binary.BigEndian.Uint16(buffer[6:8])
 	nscount := binary.BigEndian.Uint16(buffer[8:10])
 	arcount := binary.BigEndian.Uint16(buffer[10:12])
-	dnsHeader := &DnsHeader{}
+	dnsHeader := DnsHeader{}
 	dnsHeader.ID = id
 	dnsHeader.QR = qr
 	dnsHeader.Opcode = Opcode(opcode)
@@ -50,14 +50,14 @@ func (p *DnsMessageDecoder) Decode(dest *DnsMessage) error {
 	dnsHeader.RecursionDesired = rd
 	dnsHeader.RecursionAvailable = ra
 	dnsHeader.Z = z
-	dnsHeader.ResponseCode = ResponseCode(rcode)
+	dnsHeader.Rcode = Rcode(rcode)
 	dnsHeader.Qdcount = qdcount
 	dnsHeader.Ancount = ancount
 	dnsHeader.Nscount = nscount
 	dnsHeader.Arcount = arcount
 
 	// parse questions section
-	questions := []*DnsQuestion{}
+	questions := []DnsQuestion{}
 	p.idx = 12
 	for i := 0; i < int(qdcount); i++ {
 		qname, err := p.parseName()
@@ -66,7 +66,7 @@ func (p *DnsMessageDecoder) Decode(dest *DnsMessage) error {
 		}
 		qtype := Type(binary.BigEndian.Uint16(buffer[p.idx : p.idx+2]))
 		qclass := Class(binary.BigEndian.Uint16(buffer[p.idx+2 : p.idx+4]))
-		question := &DnsQuestion{
+		question := DnsQuestion{
 			Qname:  qname,
 			Qtype:  qtype,
 			Qclass: qclass,
@@ -77,7 +77,7 @@ func (p *DnsMessageDecoder) Decode(dest *DnsMessage) error {
 
 	// parse answer, authority, and additional sections
 	totalRecords := ancount + nscount + arcount
-	records := []*DnsRecord{}
+	records := []DnsRecord{}
 
 	for i := 0; i < int(totalRecords); i++ {
 		name, err := p.parseName()
@@ -113,7 +113,7 @@ func (p *DnsMessageDecoder) Decode(dest *DnsMessage) error {
 			return err
 		}
 
-		record := &DnsRecord{
+		record := DnsRecord{
 			Name:  name,
 			Type:  recordType,
 			Class: class,

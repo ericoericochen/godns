@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-func DigFormat(message *DnsMessage) string {
+func DigFormat(message DnsMessage) string {
 	var b strings.Builder
 	header := message.Header
 
@@ -33,7 +33,7 @@ func DigFormat(message *DnsMessage) string {
 	}
 
 	fmt.Fprintf(&b, ";; ->>HEADER<<- opcode: %s, status: %s, id: %d\n",
-		opcodes[header.Opcode], responseCodeMap[header.ResponseCode], header.ID)
+		opcodes[header.Opcode], rcodeMap[header.Rcode], header.ID)
 	fmt.Fprintf(&b, ";; flags: %s; QUERY: %d, ANSWER: %d, AUTHORITY: %d, ADDITIONAL: %d\n",
 		strings.Join(flags, " "), header.Qdcount, header.Ancount, header.Nscount, header.Arcount)
 
@@ -47,7 +47,7 @@ func DigFormat(message *DnsMessage) string {
 
 	sections := []struct {
 		name    string
-		records []*DnsRecord
+		records []DnsRecord
 	}{
 		{"ANSWER", message.Answers},
 		{"AUTHORITY", message.Authority},
