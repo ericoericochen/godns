@@ -1,64 +1,65 @@
 package godns
 
-// import (
-// 	"fmt"
+import "fmt"
 
-// 	"github.com/ericoericochen/godns"
-// )
+type RecursiveResolver struct {
+	cache *DnsCache
+}
 
-// type RecursiveResolver struct {
-// 	cache *godns.DnsCache
-// }
+func NewRecursiveResolver() *RecursiveResolver {
+	return &RecursiveResolver{}
+}
 
-// func NewRecursiveResolver() DnsResolver {
-// 	return &RecursiveResolver{}
-// }
+const rootNameServer = "198.41.0.4"
 
-// const rootNameServer = "198.41.0.4"
+func (r *RecursiveResolver) WithCache(cache *DnsCache) *RecursiveResolver {
+	r.cache = cache
+	return r
+}
 
-// func (r *RecursiveResolver) WithCache(cache *godns.DnsCache) DnsResolver {
-// 	r.cache = cache
-// 	return r
-// }
+func (r *RecursiveResolver) Resolve(query DnsMessage) DnsMessage {
+	return r.resolve(query)
+}
 
-// func (r *RecursiveResolver) Resolve(message godns.DnsMessage) godns.DnsMessage {
-// 	return r.resolve(message)
-// }
+func (r *RecursiveResolver) resolve(query DnsMessage) DnsMessage {
+	serverIp := rootNameServer
+	for {
+		fmt.Println(fmt.Sprintf("resolving query against nameserver: %v", rootNameServer))
+		res := SendDnsMessage(serverIp, UDP_DNS_PORT, query)
+		fmt.Println(res)
+		if res.Header.Rcode != RcodeNoError {
+			return res
+		}
 
-// func (r *RecursiveResolver) resolve(message godns.DnsMessage) godns.DnsMessage {
-// 	serverIp := rootNameServer
-// 	for {
-// 		fmt.Println(fmt.Sprintf("resolving query against nameserver: %v", rootNameServer))
-// 		res := SendDnsMessage(serverIp, UDP_DNS_PORT, message)
-// 		fmt.Println(res)
-// 		if res.Header.Rcode != godns.RcodeNoError {
-// 			return res
-// 		}
+		// did we receive answer to query vs. referral
+		if len(res.Answers) > 0 {
+			fmt.Println("received answer")
+			return res
+		}
 
-// 		// did we receive answer to query vs. referral
-// 		if len(res.Answers) > 0 {
-// 			fmt.Println("received answer")
-// 			return res
-// 		}
+		fmt.Println("did not receive answer")
+		referralNameservers := getNSRdatas(res.Authority)
+		referralNameserver := referralNameservers[0]
 
-// 		fmt.Println("did not receive answer")
-// 		var referralNS string
-// 		for _, record := range res.Authority {
-// 			if record.Type == godns.TypeNS {
-// 				referralNS = record.RData
-// 				break
-// 			}
-// 		}
+		fmt.Println("referral nameserver: ", referralNameservers[0])
 
-// 		fmt.Println("referral nameserver: ", referralNS)
+		// find the ip address of the referral ns
+		for _, record := range res.Additional {
+			if record.Name == referralNameserver && record.Type == TypeA {
+				fmt.Println("found ip address of ", referralNameserver, "=", record.RData)
+				serverIp = record.RData
+				break
+			}
+		}
+	}
+}
 
-// 		// find the ip address of the referral ns
-// 		for _, record := range res.Additional {
-// 			if record.Name == referralNS && record.Type == godns.TypeA {
-// 				fmt.Println("found ip address of ", referralNS, "=", record.RData)
-// 				serverIp = record.RData
-// 				break
-// 			}
-// 		}
-// 	}
-// }
+func getNSRdatas(records []DnsRecord) []string {
+	rdatas := []string{}
+	for _, record := range records {
+		if record.Type == TypeNS {
+			rdatas = append(rdatas, record.RData)
+		}
+	}
+	return rdatas
+}

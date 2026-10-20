@@ -4,12 +4,11 @@ import (
 	"fmt"
 
 	"github.com/ericoericochen/godns"
-	"github.com/ericoericochen/godns/resolvers"
 )
 
 func main() {
 	// rootNameServer := "192.203.230.10"
-	resolver := resolvers.NewRecursiveResolver()
+	resolver := godns.NewRecursiveResolver()
 	qname := "google.com."
 	qtype := godns.TypeA
 	qclass := godns.ClassIN

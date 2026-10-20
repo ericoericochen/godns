@@ -1,6 +1,6 @@
 resolving query against nameserver: 198.41.0.4
 DnsMessage {
-	Header { ID: 47110, QR: true, OPCODE: 0, AA: false, TC: true, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 0, NSCOUNT: 13, ARCOUNT: 11 }
+	Header { ID: 16407, QR: true, OPCODE: 0, AA: false, TC: true, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 0, NSCOUNT: 13, ARCOUNT: 11 }
 	Questions {
 		Question { QNAME: google.com., QTYPE: A, QCLASS: IN }
 	}
@@ -40,7 +40,7 @@ referral nameserver:  l.gtld-servers.net.
 found ip address of  l.gtld-servers.net. = 192.41.162.30
 resolving query against nameserver: 198.41.0.4
 DnsMessage {
-	Header { ID: 47110, QR: true, OPCODE: 0, AA: false, TC: false, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 0, NSCOUNT: 4, ARCOUNT: 8 }
+	Header { ID: 16407, QR: true, OPCODE: 0, AA: false, TC: false, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 0, NSCOUNT: 4, ARCOUNT: 8 }
 	Questions {
 		Question { QNAME: google.com., QTYPE: A, QCLASS: IN }
 	}
@@ -68,12 +68,12 @@ referral nameserver:  ns2.google.com.
 found ip address of  ns2.google.com. = 216.239.34.10
 resolving query against nameserver: 198.41.0.4
 DnsMessage {
-	Header { ID: 47110, QR: true, OPCODE: 0, AA: true, TC: false, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 1, NSCOUNT: 0, ARCOUNT: 0 }
+	Header { ID: 16407, QR: true, OPCODE: 0, AA: true, TC: false, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 1, NSCOUNT: 0, ARCOUNT: 0 }
 	Questions {
 		Question { QNAME: google.com., QTYPE: A, QCLASS: IN }
 	}
 	Answers{
-		Record { NAME: google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.250.190.238 }
+		Record { NAME: google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.250.72.14 }
 	}
 	Authorities {
 	}
@@ -82,15 +82,15 @@ DnsMessage {
 }
 received answer
 ------
-{47110 true 0 true false false false 0 0 1 1 0 0}
+{16407 true 0 true false false false 0 0 1 1 0 0}
 Question { QNAME: google.com., QTYPE: A, QCLASS: IN }
 DnsMessage {
-	Header { ID: 47110, QR: true, OPCODE: 0, AA: true, TC: false, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 1, NSCOUNT: 0, ARCOUNT: 0 }
+	Header { ID: 16407, QR: true, OPCODE: 0, AA: true, TC: false, RD: false, RA: false, Z: 0, RCODE: NOERROR, QDCOUNT: 1, ANCOUNT: 1, NSCOUNT: 0, ARCOUNT: 0 }
 	Questions {
 		Question { QNAME: google.com., QTYPE: A, QCLASS: IN }
 	}
 	Answers{
-		Record { NAME: google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.250.190.238 }
+		Record { NAME: google.com., TYPE: A, CLASS: IN, TTL: 300, RDATA: 142.250.72.14 }
 	}
 	Authorities {
 	}
