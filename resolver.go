@@ -7,6 +7,8 @@ type DnsResolver interface {
 	Resolve(DnsMessage) DnsMessage
 }
 
+// cache utils
+
 // validation
 
 var InvalidDnsQueryError = errors.New("InvalidDnsQueryError")

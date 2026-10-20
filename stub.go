@@ -22,55 +22,75 @@ func (r *StubResolver) WithCache(cache *DnsCache) *StubResolver {
 	return r
 }
 
-func (r *StubResolver) Resolve(message DnsMessage) DnsMessage {
+func (r *StubResolver) Resolve(query DnsMessage) DnsMessage {
 	// validate dns query message
-	err := validateQueryDnsMessage(message)
+	err := validateQueryDnsMessage(query)
 	if err != nil {
-		return toResponse(message, RcodeFormatError)
+		return toResponse(query, RcodeFormatError)
 	}
 
-	// build cache key
+	// try to get cached response
+	cachedMessage := r.getCached(query)
+	if cachedMessage != nil {
+		return *cachedMessage
+	}
+
+	// send the dns message to recursive resolver
+	res := SendDnsMessage(r.Server, UDP_DNS_PORT, query)
+
+	// cache the response if successful response
+	r.maybeCache(query, res)
+
+	return res
+}
+
+func (r *StubResolver) getCached(query DnsMessage) *DnsMessage {
+	if !r.useCache() {
+		return nil
+	}
+	cacheKey := queryToCacheKey(query)
+	entry := r.cache.Get(cacheKey)
+	if entry == nil {
+		return nil
+	}
+
+	res := NewDnsMessageBuilder().
+		From(query).
+		Response().
+		RecursionAvailable(true).
+		Answers(entry.Value.Answers).
+		Authority(entry.Value.Authority).
+		Additional(entry.Value.Additional).
+		Build()
+
+	return &res
+}
+
+func (r *StubResolver) maybeCache(query DnsMessage, response DnsMessage) {
+	if r.useCache() && response.Header.Rcode == RcodeNoError {
+		cacheKey := queryToCacheKey(query)
+		value := DnsCacheValue{
+			Answers:    response.Answers,
+			Authority:  response.Authority,
+			Additional: response.Additional,
+		}
+		ttl := value.ttl()
+		r.cache.Put(cacheKey, value, ttl)
+	}
+}
+
+func (r *StubResolver) useCache() bool {
+	return r.cache != nil
+}
+
+// utilties
+
+// create dns cache key from dns query message
+func queryToCacheKey(message DnsMessage) DnsCacheKey {
 	question := message.Questions[0]
 	cacheKey := DnsCacheKey{}
 	cacheKey.Qname = question.Qname
 	cacheKey.Qtype = question.Qtype
 	cacheKey.Qclass = question.Qclass
-
-	// check if response is cached
-	// entry, hit := r.cache.Get(cacheKey)
-	// if hit {
-	// 	fmt.Println("cache hit")
-	// 	res := NewDnsMessageBuilder().
-	// 		From(message).
-	// 		Response().
-	// 		RecursionAvailable(true).
-	// 		Answers(entry.Answers).
-	// 		Authority(entry.Authority).
-	// 		Additional(entry.Additional).
-	// 		Build()
-
-	// 	return res
-	// }
-
-	// send the dns message to recursive resolver
-	res := SendDnsMessage(r.Server, UDP_DNS_PORT, message)
-
-	// cache the response if successful response
-	// if r.useCache() && res.Header.Rcode == RcodeNoError {
-	// 	fmt.Println("caching response")
-	// 	entry := DnsCacheValue{
-	// 		Timestamp:  time.Now(),
-	// 		TTL:        300,
-	// 		Answers:    res.Answers,
-	// 		Authority:  res.Authority,
-	// 		Additional: res.Additional,
-	// 	}
-	// 	r.cache.Put(cacheKey, entry)
-	// }
-
-	return res
-}
-
-func (r *StubResolver) useCache() bool {
-	return r.cache != nil
+	return cacheKey
 }
