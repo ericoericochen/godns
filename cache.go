@@ -35,12 +35,12 @@ type DnsCacheEntry struct {
 }
 
 // internal nodes
-type freqNode struct {
+type freqCacheNode struct {
 	freq   int
 	values *list.List
 }
 
-type valueNode struct {
+type valueCacheNode struct {
 	freqParent *list.Element
 	key        DnsCacheKey
 	value      DnsCacheValue
@@ -48,16 +48,16 @@ type valueNode struct {
 	ttl        int
 }
 
-func (vn *valueNode) expiresAt() time.Time {
+func (vn *valueCacheNode) expiresAt() time.Time {
 	return vn.timestamp.Add(time.Duration(vn.ttl) * time.Second)
 }
 
-func (vn *valueNode) expired() bool {
+func (vn *valueCacheNode) expired() bool {
 	return !time.Now().Before(vn.expiresAt())
 }
 
-func newFreqNode(freq int) *freqNode {
-	freqNode := &freqNode{}
+func newFreqNode(freq int) *freqCacheNode {
+	freqNode := &freqCacheNode{}
 	freqNode.freq = freq
 	freqNode.values = list.New()
 	return freqNode
@@ -84,7 +84,7 @@ func (c *DnsCache) Put(key DnsCacheKey, value DnsCacheValue, ttl int) bool {
 	}
 
 	// create value node
-	valueNode := &valueNode{key: key, value: value, timestamp: time.Now(), ttl: ttl}
+	valueNode := &valueCacheNode{key: key, value: value, timestamp: time.Now(), ttl: ttl}
 
 	// value node should point to frequency node 1 at the head
 	// create the node if it doesn't exist
@@ -97,7 +97,7 @@ func (c *DnsCache) Put(key DnsCacheKey, value DnsCacheValue, ttl int) bool {
 
 	// add value node to the front of doubly linked list of freq node
 	valueNode.freqParent = freqHead
-	freqNode := freqHead.Value.(*freqNode)
+	freqNode := freqHead.Value.(*freqCacheNode)
 	valueEl := freqNode.values.PushFront(valueNode)
 	c.hashmap[key] = valueEl
 
@@ -122,7 +122,7 @@ func (c *DnsCache) Get(key DnsCacheKey) *DnsCacheEntry {
 		return nil
 	}
 
-	valueNode := valueEl.Value.(*valueNode)
+	valueNode := valueEl.Value.(*valueCacheNode)
 
 	// check if value has expired, if so evict from cache
 	if valueNode.expired() {
@@ -131,12 +131,42 @@ func (c *DnsCache) Get(key DnsCacheKey) *DnsCacheEntry {
 	}
 
 	// increment frequency
+	freqEl := valueNode.freqParent
+	freqNode := freqEl.Value.(*freqCacheNode)
+	neighborFreqEl := freqEl.Next()
+	nextFreq := freqNode.freq + 1
+
+	insertAfter := false
+	var nextFreqNode *freqCacheNode
+	var nextFreqEl *list.Element
+
+	if neighborFreqEl == nil {
+		nextFreqNode = newFreqNode(nextFreq)
+		insertAfter = true
+	} else {
+		neighborFreqNode := neighborFreqEl.Value.(*freqCacheNode)
+		if neighborFreqNode.freq == nextFreq {
+			nextFreqNode = neighborFreqNode
+			nextFreqEl = neighborFreqEl
+		} else {
+			nextFreqNode = newFreqNode(nextFreq)
+			insertAfter = true
+		}
+	}
+
+	if insertAfter {
+		nextFreqEl = c.freqs.InsertAfter(nextFreqNode, freqEl)
+	}
+
+	// add the value node to the next frequency node
+	freqNode.values.Remove(valueEl)
+	valueNode.freqParent = nextFreqEl
 
 	entry := &DnsCacheEntry{}
 	entry.Value = valueNode.value
 	entry.TTL = valueNode.ttl
 	entry.Timestamp = valueNode.timestamp
-	entry.Hits = 1
+	entry.Hits = nextFreq
 	return entry
 }
 
@@ -147,7 +177,7 @@ func (c *DnsCache) evict() {
 		return
 	}
 
-	freqNode := freqHead.Value.(*freqNode)
+	freqNode := freqHead.Value.(*freqCacheNode)
 	valueTail := freqNode.values.Back()
 	if valueTail == nil {
 		return
@@ -157,7 +187,7 @@ func (c *DnsCache) evict() {
 	freqNode.values.Remove(valueTail)
 
 	// remove key from hashmap
-	valueEl := valueTail.Value.(*valueNode)
+	valueEl := valueTail.Value.(*valueCacheNode)
 	delete(c.hashmap, valueEl.key)
 
 	c.size--
