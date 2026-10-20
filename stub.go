@@ -1,10 +1,5 @@
 package godns
 
-import (
-	"fmt"
-	"time"
-)
-
 type StubResolver struct {
 	Server string
 	cache  *DnsCache
@@ -42,36 +37,36 @@ func (r *StubResolver) Resolve(message DnsMessage) DnsMessage {
 	cacheKey.Qclass = question.Qclass
 
 	// check if response is cached
-	entry, hit := r.cache.Get(cacheKey)
-	if hit {
-		fmt.Println("cache hit")
-		res := NewDnsMessageBuilder().
-			From(message).
-			Response().
-			RecursionAvailable(true).
-			Answers(entry.Answers).
-			Authority(entry.Authority).
-			Additional(entry.Additional).
-			Build()
+	// entry, hit := r.cache.Get(cacheKey)
+	// if hit {
+	// 	fmt.Println("cache hit")
+	// 	res := NewDnsMessageBuilder().
+	// 		From(message).
+	// 		Response().
+	// 		RecursionAvailable(true).
+	// 		Answers(entry.Answers).
+	// 		Authority(entry.Authority).
+	// 		Additional(entry.Additional).
+	// 		Build()
 
-		return res
-	}
+	// 	return res
+	// }
 
 	// send the dns message to recursive resolver
 	res := SendDnsMessage(r.Server, UDP_DNS_PORT, message)
 
 	// cache the response if successful response
-	if r.useCache() && res.Header.Rcode == RcodeNoError {
-		fmt.Println("caching response")
-		entry := DnsCacheEntry{
-			Timestamp:  time.Now(),
-			TTL:        300,
-			Answers:    res.Answers,
-			Authority:  res.Authority,
-			Additional: res.Additional,
-		}
-		r.cache.Put(cacheKey, entry)
-	}
+	// if r.useCache() && res.Header.Rcode == RcodeNoError {
+	// 	fmt.Println("caching response")
+	// 	entry := DnsCacheValue{
+	// 		Timestamp:  time.Now(),
+	// 		TTL:        300,
+	// 		Answers:    res.Answers,
+	// 		Authority:  res.Authority,
+	// 		Additional: res.Additional,
+	// 	}
+	// 	r.cache.Put(cacheKey, entry)
+	// }
 
 	return res
 }
