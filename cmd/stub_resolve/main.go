@@ -11,7 +11,7 @@ import (
 
 func main() {
 	resolver := godns.NewStubResolver().WithCache(godns.NewDnsCache(1000))
-	qname := "www.google.com"
+	qname := "www.google.com."
 	qtype := godns.TypeA
 	qclass := godns.ClassIN
 

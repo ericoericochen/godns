@@ -19,5 +19,6 @@ Plan
 - [x] Parse Binary DNS Message
 - [x] Implement a Stub Resolver
 - [x] Implement a Recursive Resolver
-- [ ] Add DNS Cache to Resolvers
-- [ ] Implement DNS Server
+- [x] Add DNS Cache to Stub Resolver
+- [ ] Add DNS Cache to Recursive Resolver
+- [ ] Implement DNS UDP Server

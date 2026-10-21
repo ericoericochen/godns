@@ -28,6 +28,14 @@ type DnsCacheValue struct {
 	Additional []DnsRecord
 }
 
+func NewDnsCacheValue() DnsCacheValue {
+	return DnsCacheValue{
+		Answers:    []DnsRecord{},
+		Authority:  []DnsRecord{},
+		Additional: []DnsRecord{},
+	}
+}
+
 func (cv *DnsCacheValue) ttl() int {
 	ttl := math.MaxInt
 	records := []DnsRecord{}

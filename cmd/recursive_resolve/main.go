@@ -9,7 +9,7 @@ import (
 func main() {
 	// rootNameServer := "192.203.230.10"
 	resolver := godns.NewRecursiveResolver()
-	qname := "google.com."
+	qname := "www.google.com."
 	qtype := godns.TypeA
 	qclass := godns.ClassIN
 

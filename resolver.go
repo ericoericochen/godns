@@ -7,8 +7,6 @@ type DnsResolver interface {
 	Resolve(DnsMessage) DnsMessage
 }
 
-// cache utils
-
 // validation
 
 var InvalidDnsQueryError = errors.New("InvalidDnsQueryError")
@@ -37,7 +35,8 @@ func validateQueryDnsMessage(message DnsMessage) error {
 	return nil
 }
 
-// errors
+// response
+
 func toResponse(message DnsMessage, rcode Rcode) DnsMessage {
 	return NewDnsMessageBuilder().From(message).Response().Rcode(rcode).Build()
 }
