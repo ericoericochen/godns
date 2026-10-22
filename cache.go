@@ -143,35 +143,42 @@ func (c *DnsCache) Get(key DnsCacheKey) *DnsCacheEntry {
 	}
 
 	// increment frequency
+	// get the current freq node and the next freq node
 	freqEl := valueNode.freqParent
 	freqNode := freqEl.Value.(*freqCacheNode)
 	neighborFreqEl := freqEl.Next()
 	nextFreq := freqNode.freq + 1
 
-	insertAfter := false
 	var nextFreqNode *freqCacheNode
 	var nextFreqEl *list.Element
 
 	if neighborFreqEl == nil {
+		// no next freq node
+		// create one thats the current freq + 1
 		nextFreqNode = newFreqNode(nextFreq)
-		insertAfter = true
+		nextFreqEl = c.freqs.InsertAfter(nextFreqNode, freqEl)
 	} else {
 		neighborFreqNode := neighborFreqEl.Value.(*freqCacheNode)
 		if neighborFreqNode.freq == nextFreq {
+			// next freq node is already current + 1
 			nextFreqNode = neighborFreqNode
 			nextFreqEl = neighborFreqEl
 		} else {
+			// next freq node is not current + 1 so create it
 			nextFreqNode = newFreqNode(nextFreq)
-			insertAfter = true
+			nextFreqEl = c.freqs.InsertAfter(nextFreqNode, freqEl)
 		}
-	}
-
-	if insertAfter {
-		nextFreqEl = c.freqs.InsertAfter(nextFreqNode, freqEl)
 	}
 
 	// add the value node to the next frequency node
 	freqNode.values.Remove(valueEl)
+	nextFreqNode.values.PushFront(valueNode)
+
+	// no cache entries with current freq hits
+	// remove the freq node
+	if freqNode.values.Len() == 0 {
+		c.freqs.Remove(freqEl)
+	}
 	valueNode.freqParent = nextFreqEl
 
 	entry := &DnsCacheEntry{}
