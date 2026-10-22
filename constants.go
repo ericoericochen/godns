@@ -1,6 +1,6 @@
 package godns
 
-var ROOT_NAME_SERVERS []string = []string{
+var ROOT_NAME_SERVER_IPV4S []string = []string{
 	"198.41.0.4",
 	"170.247.170.2",
 	"192.33.4.12",

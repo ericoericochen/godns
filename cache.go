@@ -3,7 +3,6 @@ package godns
 import (
 	"container/list"
 	"fmt"
-	"math"
 	"sync"
 	"time"
 )
@@ -23,35 +22,27 @@ type DnsCacheKey struct {
 }
 
 type DnsCacheValue struct {
+	TTL        int
 	Answers    []DnsRecord
 	Authority  []DnsRecord
 	Additional []DnsRecord
 }
 
-func NewDnsCacheValue() DnsCacheValue {
-	return DnsCacheValue{
-		Answers:    []DnsRecord{},
-		Authority:  []DnsRecord{},
-		Additional: []DnsRecord{},
-	}
-}
+// func getTTL(answers []DnsRecord, authority []DnsRecord, additional []DnsRecord) int {
+// 	ttl := math.MaxInt
+// 	records := []DnsRecord{}
+// 	records = append(records, cv.Answers...)
+// 	records = append(records, cv.Authority...)
+// 	records = append(records, cv.Additional...)
+// 	for _, record := range records {
+// 		ttl = min(ttl, int(record.TTL))
+// 	}
 
-func (cv *DnsCacheValue) ttl() int {
-	ttl := math.MaxInt
-	records := []DnsRecord{}
-	records = append(records, cv.Answers...)
-	records = append(records, cv.Authority...)
-	records = append(records, cv.Additional...)
-	for _, record := range records {
-		ttl = min(ttl, int(record.TTL))
-	}
-
-	return ttl
-}
+// 	return ttl
+// }
 
 type DnsCacheEntry struct {
 	Timestamp time.Time
-	TTL       int
 	Hits      int
 	Value     DnsCacheValue
 }
@@ -67,11 +58,10 @@ type valueCacheNode struct {
 	key        DnsCacheKey
 	value      DnsCacheValue
 	timestamp  time.Time
-	ttl        int
 }
 
 func (vn *valueCacheNode) expiresAt() time.Time {
-	return vn.timestamp.Add(time.Duration(vn.ttl) * time.Second)
+	return vn.timestamp.Add(time.Duration(vn.value.TTL) * time.Second)
 }
 
 func (vn *valueCacheNode) expired() bool {
@@ -94,7 +84,7 @@ func NewDnsCache(capacity int) *DnsCache {
 	return cache
 }
 
-func (c *DnsCache) Put(key DnsCacheKey, value DnsCacheValue, ttl int) bool {
+func (c *DnsCache) Put(key DnsCacheKey, value DnsCacheValue) bool {
 	fmt.Println("putting ", key, "=", value)
 
 	c.mu.Lock()
@@ -106,7 +96,7 @@ func (c *DnsCache) Put(key DnsCacheKey, value DnsCacheValue, ttl int) bool {
 	}
 
 	// create value node
-	valueNode := &valueCacheNode{key: key, value: value, timestamp: time.Now(), ttl: ttl}
+	valueNode := &valueCacheNode{key: key, value: value, timestamp: time.Now()}
 
 	// value node should point to frequency node 1 at the head
 	// create the node if it doesn't exist
@@ -186,7 +176,6 @@ func (c *DnsCache) Get(key DnsCacheKey) *DnsCacheEntry {
 
 	entry := &DnsCacheEntry{}
 	entry.Value = valueNode.value
-	entry.TTL = valueNode.ttl
 	entry.Timestamp = valueNode.timestamp
 	entry.Hits = nextFreq
 	return entry

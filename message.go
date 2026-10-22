@@ -39,6 +39,10 @@ func NewDnsMessage() DnsMessage {
 	}
 }
 
+func (m *DnsMessage) Qname() string {
+	return m.Questions[0].Qname
+}
+
 func NewDnsQuery(qname string, qtype Type, qclass Class, rd bool) DnsMessage {
 	message := NewDnsMessage()
 	message.Header.Qdcount = 1
