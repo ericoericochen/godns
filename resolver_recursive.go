@@ -26,37 +26,55 @@ func (r *RecursiveResolver) Resolve(query DnsMessage) DnsMessage {
 }
 
 func (r *RecursiveResolver) resolve(query DnsMessage) DnsMessage {
-	fmt.Println("yo")
+	// check if query response is cached
+	res, cached := r.getCachedResponse(query)
+	if cached {
+		return *res
+	}
+
 	// find the best starting nameserver to resolve against
 	nameservers := r.getBestStartingNameserverIpv4s(query.Qname())
+	startNameserver := nameservers[0]
 
-	fmt.Println(nameservers)
+	// fmt.Println(nameservers)
 
-	serverIp := rootNameServer
+	serverIp := startNameserver
 	for {
-		fmt.Println(fmt.Sprintf("resolving query against nameserver: %v", rootNameServer))
+		fmt.Println(fmt.Sprintf("resolving qname=%v qtype=%v qclass=%v with ns %v",
+			query.Qname(),
+			typeNameMap[query.Qtype()],
+			classNameMap[query.Qclass()],
+			serverIp))
 		res := SendDnsMessage(serverIp, UDP_DNS_PORT, query)
-		fmt.Println(res)
 		if res.Header.Rcode != RcodeNoError {
 			return res
 		}
 
 		// did we receive answer to query vs. referral
 		if len(res.Answers) > 0 {
-			fmt.Println("received answer")
+			if r.useCache() {
+				cacheKey := DnsCacheKey{
+					Qname:  query.Qname(),
+					Qtype:  query.Qtype(),
+					Qclass: query.Qclass(),
+				}
+				cacheValue := DnsCacheValue{
+					TTL:        getTTL(res.Answers, res.Authority, res.Additional),
+					Answers:    res.Answers,
+					Authority:  res.Authority,
+					Additional: res.Additional,
+				}
+				r.cache.Put(cacheKey, cacheValue)
+			}
 			return res
 		}
 
-		fmt.Println("did not receive answer")
 		referralNameservers := getNSRdatas(res.Authority)
 		referralNameserver := referralNameservers[0]
-
-		fmt.Println("referral nameserver: ", referralNameservers[0])
 
 		// find the ip address of the referral ns
 		for _, record := range res.Additional {
 			if record.Name == referralNameserver && record.Type == TypeA {
-				fmt.Println("found ip address of ", referralNameserver, "=", record.RData)
 				serverIp = record.RData
 				break
 			}
@@ -130,6 +148,14 @@ func (r *RecursiveResolver) getBestStartingNameserverIpv4s(qname string) []strin
 
 	// will never reach here
 	return []string{}
+}
+
+func (r *RecursiveResolver) getCachedResponse(query DnsMessage) (*DnsMessage, bool) {
+	if !r.useCache() {
+		return nil, false
+	}
+
+	return nil, false
 }
 
 func getParentDomain(domain string) string {

@@ -42,6 +42,12 @@ func NewDnsMessage() DnsMessage {
 func (m *DnsMessage) Qname() string {
 	return m.Questions[0].Qname
 }
+func (m *DnsMessage) Qtype() Type {
+	return m.Questions[0].Qtype
+}
+func (m *DnsMessage) Qclass() Class {
+	return m.Questions[0].Qclass
+}
 
 func NewDnsQuery(qname string, qtype Type, qclass Class, rd bool) DnsMessage {
 	message := NewDnsMessage()

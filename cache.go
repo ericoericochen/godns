@@ -3,6 +3,7 @@ package godns
 import (
 	"container/list"
 	"fmt"
+	"math"
 	"sync"
 	"time"
 )
@@ -28,18 +29,17 @@ type DnsCacheValue struct {
 	Additional []DnsRecord
 }
 
-// func getTTL(answers []DnsRecord, authority []DnsRecord, additional []DnsRecord) int {
-// 	ttl := math.MaxInt
-// 	records := []DnsRecord{}
-// 	records = append(records, cv.Answers...)
-// 	records = append(records, cv.Authority...)
-// 	records = append(records, cv.Additional...)
-// 	for _, record := range records {
-// 		ttl = min(ttl, int(record.TTL))
-// 	}
-
-// 	return ttl
-// }
+func getTTL(answers []DnsRecord, authority []DnsRecord, additional []DnsRecord) int {
+	ttl := math.MaxInt
+	records := []DnsRecord{}
+	records = append(records, answers...)
+	records = append(records, authority...)
+	records = append(records, additional...)
+	for _, record := range records {
+		ttl = min(ttl, int(record.TTL))
+	}
+	return ttl
+}
 
 type DnsCacheEntry struct {
 	Timestamp time.Time
