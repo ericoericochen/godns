@@ -9,10 +9,16 @@ import (
 
 type DnsMessageEncoder struct {
 	message DnsMessage
+	cursor  int
+	offsets map[string]int
 }
 
 func NewDnsMessageEncoder(message DnsMessage) *DnsMessageEncoder {
-	return &DnsMessageEncoder{message: message}
+	return &DnsMessageEncoder{
+		message: message,
+		cursor:  0,
+		offsets: map[string]int{},
+	}
 }
 
 func (e *DnsMessageEncoder) Write(w io.Writer) error {
@@ -73,6 +79,9 @@ func (e *DnsMessageEncoder) writeHeader(w io.Writer) error {
 	b = binary.BigEndian.AppendUint16(b, header.Nscount)
 	b = binary.BigEndian.AppendUint16(b, header.Arcount)
 
+	// header takes up 12 bytes, move cursor
+	e.cursor += 12
+
 	_, err := w.Write(b)
 	return err
 }
@@ -80,19 +89,10 @@ func (e *DnsMessageEncoder) writeHeader(w io.Writer) error {
 func (e *DnsMessageEncoder) writeQuestion(question DnsQuestion, w io.Writer) error {
 	// encode qname
 	b := []byte{}
-	names := strings.Split(question.Qname, ".")
-	for _, name := range names {
-		length := len(name)
-		if length == 0 {
-			continue
-		}
-		label := []byte(name)
-		b = append(b, byte(length))
-		b = append(b, label...)
-	}
-	b = append(b, byte(0))
+	b = append(b, e.encodeName(question.Qname)...)
 	b = binary.BigEndian.AppendUint16(b, uint16(question.Qtype))
 	b = binary.BigEndian.AppendUint16(b, uint16(question.Qclass))
+	e.cursor += len(b)
 	_, err := w.Write(b)
 	return err
 }
@@ -108,12 +108,20 @@ func (e *DnsMessageEncoder) writeRecord(record DnsRecord, w io.Writer) error {
 		b = binary.BigEndian.AppendUint16(b, uint16(len(encodedRData)))
 		b = append(b, encodedRData...)
 	}
+	e.cursor += len(b)
 	_, err := w.Write(b)
 	return err
 }
 
 func (e *DnsMessageEncoder) encodeName(name string) []byte {
 	b := []byte{}
+	offset, exists := e.offsets[name]
+	if exists {
+		ptr := 0b11000000_00000000 | uint16(offset)
+		b = binary.BigEndian.AppendUint16(b, ptr)
+		return b
+	}
+
 	names := strings.Split(name, ".")
 	for _, part := range names {
 		length := len(part)
@@ -125,6 +133,8 @@ func (e *DnsMessageEncoder) encodeName(name string) []byte {
 		b = append(b, label...)
 	}
 	b = append(b, byte(0))
+	e.offsets[name] = e.cursor
+
 	return b
 }
 

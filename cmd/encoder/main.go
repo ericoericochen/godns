@@ -19,7 +19,7 @@ func main() {
 			Type:  qtype,
 			Class: qclass,
 			TTL:   300,
-			RData: "1.1.1.1",
+			RData: "1.1.1.210",
 		},
 	}
 
