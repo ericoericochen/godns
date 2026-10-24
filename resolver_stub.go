@@ -73,7 +73,6 @@ func (r *StubResolver) maybeCache(query DnsMessage, response DnsMessage) {
 			Answers:    response.Answers,
 			Authority:  response.Authority,
 			Additional: response.Additional,
-			TTL:        300,
 		}
 		r.cache.Put(cacheKey, value)
 	}

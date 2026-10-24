@@ -25,4 +25,6 @@ func main() {
 	resolve("www.google.com.")
 	resolve("www.google.com.")
 	resolve("google.com.")
+	resolve("cloud.google.com.")
+	resolve("news.google.com.")
 }

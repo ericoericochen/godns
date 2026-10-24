@@ -2,7 +2,7 @@ package godns
 
 import (
 	"container/list"
-	"fmt"
+	"log"
 	"math"
 	"sync"
 	"time"
@@ -22,8 +22,18 @@ type DnsCacheKey struct {
 	Qclass Class
 }
 
+func newDnsCacheKeyFromMessage(message DnsMessage) DnsCacheKey {
+	qname := message.Qname()
+	qtype := message.Qtype()
+	qclass := message.Qclass()
+	return DnsCacheKey{
+		Qname:  qname,
+		Qtype:  qtype,
+		Qclass: qclass,
+	}
+}
+
 type DnsCacheValue struct {
-	TTL        int
 	Answers    []DnsRecord
 	Authority  []DnsRecord
 	Additional []DnsRecord
@@ -42,6 +52,7 @@ func getTTL(answers []DnsRecord, authority []DnsRecord, additional []DnsRecord) 
 }
 
 type DnsCacheEntry struct {
+	TTL       int
 	Timestamp time.Time
 	Hits      int
 	Value     DnsCacheValue
@@ -58,10 +69,11 @@ type valueCacheNode struct {
 	key        DnsCacheKey
 	value      DnsCacheValue
 	timestamp  time.Time
+	ttl        int
 }
 
 func (vn *valueCacheNode) expiresAt() time.Time {
-	return vn.timestamp.Add(time.Duration(vn.value.TTL) * time.Second)
+	return vn.timestamp.Add(time.Duration(vn.ttl) * time.Second)
 }
 
 func (vn *valueCacheNode) expired() bool {
@@ -85,7 +97,7 @@ func NewDnsCache(capacity int) *DnsCache {
 }
 
 func (c *DnsCache) Put(key DnsCacheKey, value DnsCacheValue) bool {
-	fmt.Println("putting ", key, "=", value)
+	log.Println("putting ", key, "=", value)
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
@@ -96,13 +108,13 @@ func (c *DnsCache) Put(key DnsCacheKey, value DnsCacheValue) bool {
 	}
 
 	// create value node
-	valueNode := &valueCacheNode{key: key, value: value, timestamp: time.Now()}
+	ttl := getTTL(value.Answers, value.Authority, value.Additional)
+	valueNode := &valueCacheNode{key: key, value: value, timestamp: time.Now(), ttl: ttl}
 
 	// value node should point to frequency node 1 at the head
 	// create the node if it doesn't exist
 	freqHead := c.freqs.Front()
 	if freqHead == nil {
-		fmt.Println("freq head is nil")
 		freqNode := newFreqNode(1)
 		freqHead = c.freqs.PushFront(freqNode)
 	}
@@ -185,6 +197,7 @@ func (c *DnsCache) Get(key DnsCacheKey) *DnsCacheEntry {
 	entry.Value = valueNode.value
 	entry.Timestamp = valueNode.timestamp
 	entry.Hits = nextFreq
+	entry.TTL = valueNode.ttl
 	return entry
 }
 
@@ -209,6 +222,10 @@ func (c *DnsCache) evict() {
 	delete(c.hashmap, valueEl.key)
 
 	c.size--
+}
+
+func (c *DnsCache) evictValueNode() {
+
 }
 
 func (c *DnsCache) Size() int {
