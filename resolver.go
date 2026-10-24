@@ -3,7 +3,6 @@ package godns
 import "errors"
 
 type DnsResolver interface {
-	WithCache(*DnsCache) DnsResolver
 	Resolve(DnsMessage) DnsMessage
 }
 

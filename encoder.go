@@ -26,6 +26,16 @@ func (e *DnsMessageEncoder) Write(w io.Writer) error {
 			return err
 		}
 	}
+	records := []DnsRecord{}
+	records = append(records, e.message.Answers...)
+	records = append(records, e.message.Authority...)
+	records = append(records, e.message.Additional...)
+	for _, record := range records {
+		err := e.writeRecord(record, w)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
@@ -84,4 +94,8 @@ func (e *DnsMessageEncoder) writeQuestion(question DnsQuestion, w io.Writer) err
 	b = binary.BigEndian.AppendUint16(b, uint16(question.Qclass))
 	_, err := w.Write(b)
 	return err
+}
+
+func (e *DnsMessageEncoder) writeRecord(record DnsRecord, w io.Writer) error {
+	return nil
 }
