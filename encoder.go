@@ -3,6 +3,7 @@ package godns
 import (
 	"encoding/binary"
 	"io"
+	"net"
 	"strings"
 )
 
@@ -97,5 +98,37 @@ func (e *DnsMessageEncoder) writeQuestion(question DnsQuestion, w io.Writer) err
 }
 
 func (e *DnsMessageEncoder) writeRecord(record DnsRecord, w io.Writer) error {
-	return nil
+	b := []byte{}
+	b = append(b, e.encodeName(record.Name)...)
+	b = binary.BigEndian.AppendUint16(b, uint16(record.Type))
+	b = binary.BigEndian.AppendUint16(b, uint16(record.Class))
+	b = binary.BigEndian.AppendUint32(b, uint32(record.TTL))
+	if record.Type == TypeA {
+		encodedRData := encodeIpv4(record.RData)
+		b = binary.BigEndian.AppendUint16(b, uint16(len(encodedRData)))
+		b = append(b, encodedRData...)
+	}
+	_, err := w.Write(b)
+	return err
+}
+
+func (e *DnsMessageEncoder) encodeName(name string) []byte {
+	b := []byte{}
+	names := strings.Split(name, ".")
+	for _, part := range names {
+		length := len(part)
+		if length == 0 {
+			continue
+		}
+		label := []byte(part)
+		b = append(b, byte(length))
+		b = append(b, label...)
+	}
+	b = append(b, byte(0))
+	return b
+}
+
+func encodeIpv4(ipv4 string) []byte {
+	ip := net.ParseIP(ipv4).To4()
+	return []byte(ip)
 }
