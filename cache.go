@@ -2,7 +2,6 @@ package godns
 
 import (
 	"container/list"
-	"log"
 	"math"
 	"sync"
 	"time"
@@ -37,18 +36,6 @@ type DnsCacheValue struct {
 	Answers    []DnsRecord
 	Authority  []DnsRecord
 	Additional []DnsRecord
-}
-
-func getTTL(answers []DnsRecord, authority []DnsRecord, additional []DnsRecord) int {
-	ttl := math.MaxInt
-	records := []DnsRecord{}
-	records = append(records, answers...)
-	records = append(records, authority...)
-	records = append(records, additional...)
-	for _, record := range records {
-		ttl = min(ttl, int(record.TTL))
-	}
-	return ttl
 }
 
 type DnsCacheEntry struct {
@@ -97,14 +84,27 @@ func NewDnsCache(capacity int) *DnsCache {
 }
 
 func (c *DnsCache) Put(key DnsCacheKey, value DnsCacheValue) bool {
-	log.Println("putting ", key, "=", value)
+	if c.capacity == 0 {
+		return false
+	}
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	_, exists := c.hashmap[key]
+	existingValueEl, exists := c.hashmap[key]
 	if exists {
-		return false
+		valueNode := existingValueEl.Value.(*valueCacheNode)
+		// evict cache entry
+		if valueNode.expired() {
+			c.evictKey(key)
+		} else {
+			return false
+		}
+	}
+
+	// check if cache is at capacity and if so evict
+	if c.size == c.capacity {
+		c.evict()
 	}
 
 	// create value node
@@ -117,6 +117,12 @@ func (c *DnsCache) Put(key DnsCacheKey, value DnsCacheValue) bool {
 	if freqHead == nil {
 		freqNode := newFreqNode(1)
 		freqHead = c.freqs.PushFront(freqNode)
+	} else {
+		freqNode := freqHead.Value.(*freqCacheNode)
+		if freqNode.freq != 1 {
+			freqNode := newFreqNode(1)
+			freqHead = c.freqs.PushFront(freqNode)
+		}
 	}
 
 	// add value node to the front of doubly linked list of freq node
@@ -127,11 +133,6 @@ func (c *DnsCache) Put(key DnsCacheKey, value DnsCacheValue) bool {
 
 	// increment cache size
 	c.size++
-
-	// overfilled cache, evict
-	if c.size > c.capacity {
-		c.evict()
-	}
 
 	return true
 }
@@ -150,7 +151,7 @@ func (c *DnsCache) Get(key DnsCacheKey) *DnsCacheEntry {
 
 	// check if value has expired, if so evict from cache
 	if valueNode.expired() {
-		// TODO: add evict logic here
+		c.evictValueEl(valueEl)
 		return nil
 	}
 
@@ -184,7 +185,7 @@ func (c *DnsCache) Get(key DnsCacheKey) *DnsCacheEntry {
 
 	// add the value node to the next frequency node
 	freqNode.values.Remove(valueEl)
-	nextFreqNode.values.PushFront(valueNode)
+	newValueEl := nextFreqNode.values.PushFront(valueNode)
 
 	// no cache entries with current freq hits
 	// remove the freq node
@@ -192,6 +193,7 @@ func (c *DnsCache) Get(key DnsCacheKey) *DnsCacheEntry {
 		c.freqs.Remove(freqEl)
 	}
 	valueNode.freqParent = nextFreqEl
+	c.hashmap[key] = newValueEl
 
 	entry := &DnsCacheEntry{}
 	entry.Value = valueNode.value
@@ -201,35 +203,71 @@ func (c *DnsCache) Get(key DnsCacheKey) *DnsCacheEntry {
 	return entry
 }
 
-func (c *DnsCache) evict() {
-	// get the head of the frequency doubly linked list
+func (c *DnsCache) getEvictionCandidate() *list.Element {
 	freqHead := c.freqs.Front()
 	if freqHead == nil {
-		return
+		return nil
 	}
-
 	freqNode := freqHead.Value.(*freqCacheNode)
 	valueTail := freqNode.values.Back()
 	if valueTail == nil {
+		return nil
+	}
+	return valueTail
+}
+
+func (c *DnsCache) evict() {
+	// get the eviction candidate
+	candidate := c.getEvictionCandidate()
+
+	// remove the candidate
+	c.evictValueEl(candidate)
+}
+
+func (c *DnsCache) evictKey(key DnsCacheKey) {
+	valueEl, _ := c.hashmap[key]
+	c.evictValueEl(valueEl)
+}
+
+func (c *DnsCache) evictValueEl(valueEl *list.Element) {
+	if valueEl == nil {
 		return
 	}
 
-	// remove least recently used item at the least frequently used node
-	freqNode.values.Remove(valueTail)
+	// get the freq parent node
+	valueNode := valueEl.Value.(*valueCacheNode)
+	freqEl := valueNode.freqParent
+	freqNode := freqEl.Value.(*freqCacheNode)
 
-	// remove key from hashmap
-	valueEl := valueTail.Value.(*valueCacheNode)
-	delete(c.hashmap, valueEl.key)
+	// remove the value node
+	freqNode.values.Remove(valueEl)
+
+	// remove key from the hashmap
+	delete(c.hashmap, valueNode.key)
+
+	// if freq node has no cache entries, remove the freq node
+	if freqNode.values.Len() == 0 {
+		c.freqs.Remove(freqEl)
+	}
 
 	c.size--
-}
-
-func (c *DnsCache) evictValueNode() {
-
 }
 
 func (c *DnsCache) Size() int {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	return c.size
+}
+
+// utils
+func getTTL(answers []DnsRecord, authority []DnsRecord, additional []DnsRecord) int {
+	ttl := math.MaxInt
+	records := []DnsRecord{}
+	records = append(records, answers...)
+	records = append(records, authority...)
+	records = append(records, additional...)
+	for _, record := range records {
+		ttl = min(ttl, int(record.TTL))
+	}
+	return ttl
 }
