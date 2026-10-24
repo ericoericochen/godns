@@ -96,6 +96,10 @@ func (r *RecursiveResolver) getNextNameservers(response DnsMessage) []string {
 		ipv4s = append(ipv4s, record.RData)
 	}
 
+	if !r.useCache() {
+		return ipv4s
+	}
+
 	// cache the referral nameservers and their ip addresses
 	for cacheKey, records := range nsToCache {
 		r.cache.Put(cacheKey, DnsCacheValue{
