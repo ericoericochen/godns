@@ -20,5 +20,8 @@ Plan
 - [x] Implement a Stub Resolver
 - [x] Implement a Recursive Resolver
 - [x] Add DNS Cache to Stub Resolver
-- [ ] Add DNS Cache to Recursive Resolver
-- [ ] Implement DNS UDP Server
+- [x] Add DNS Cache to Recursive Resolver
+- [x] Implement DNS UDP Server
+- [ ] Dockerize DNS UDP Server
+
+- [ ] Encode AAAA RDATA
