@@ -1,5 +1,7 @@
 package godns
 
+import "net/netip"
+
 var ROOT_NAME_SERVER_IPV4S []string = []string{
 	"198.41.0.4",
 	"170.247.170.2",
@@ -14,4 +16,11 @@ var ROOT_NAME_SERVER_IPV4S []string = []string{
 	"193.0.14.129",
 	"199.7.83.42",
 	"202.12.27.33",
+}
+
+const E_ROOT_NAMESERVER = "e.root-servers.org."
+const E_ROOT_NAMESERVER_IPV4 = "192.203.230.10"
+
+var rootNameserverIpMap = map[string]netip.Addr{
+	E_ROOT_NAMESERVER: netip.MustParseAddr(E_ROOT_NAMESERVER_IPV4),
 }

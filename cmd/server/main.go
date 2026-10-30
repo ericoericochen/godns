@@ -90,9 +90,6 @@ func main() {
 		return
 	}
 
+	// start the server on port 53
 	server.Listen(godns.UDP_DNS_PORT)
-
-	// resolver := godns.NewStubResolver()
-	// server := godns.NewDnsServer(resolver)
-	// server.Listen(godns.UDP_DNS_PORT)
 }

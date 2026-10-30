@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	resolver := godns.NewRecursiveResolver().WithCache(godns.NewDnsCache(1000))
+	resolver := godns.NewRecursiveResolver().WithRootNameserver(godns.E_ROOT_NAMESERVER).WithCache(godns.NewDnsCache(1000))
 
 	resolve := func(qname string) {
 		query := godns.NewDnsQuery(qname, godns.TypeA, godns.ClassIN, false)

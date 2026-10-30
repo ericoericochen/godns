@@ -6,7 +6,7 @@
     }
   },
   "recursive": {
-    "root_nameserver": "192.203.230.10",
+    "root_nameserver": "e.root-servers.org.",
     "cache": {
       "capacity": 10000
     }
