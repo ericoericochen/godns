@@ -1,0 +1,14 @@
+{
+  "stub": {
+    "server": "1.1.1.1",
+    "cache": {
+      "capacity": 10000
+    }
+  },
+  "recursive": {
+    "root_nameserver": "192.203.230.10",
+    "cache": {
+      "capacity": 10000
+    }
+  }
+}

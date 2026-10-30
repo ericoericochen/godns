@@ -27,7 +27,7 @@ func (s *DnsServer) Listen(port int) error {
 	defer conn.Close()
 	s.conn = conn
 
-	log.Println(fmt.Sprintf("Dns Server listening on port %v", conn.LocalAddr()))
+	log.Println(fmt.Sprintf("dns server listening on port %v", conn.LocalAddr()))
 
 	buf := make([]byte, 512)
 	for {

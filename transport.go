@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"net/netip"
 )
 
 const UDP_DNS_PORT = 53
 
-func SendUDPDatagram(serverIp string, port int, datagram []byte) ([]byte, error) {
+func SendUDPDatagram(serverIp netip.Addr, port int, datagram []byte) ([]byte, error) {
 	// create udp connection
 	conn, err := net.Dial("udp", fmt.Sprintf("%v:%v", serverIp, port))
 	if err != nil {
@@ -30,7 +31,7 @@ func SendUDPDatagram(serverIp string, port int, datagram []byte) ([]byte, error)
 
 // Send the DnsMessage to UDP nameserver
 // The datagram is a valid encoded DnsMessage
-func SendDnsMessage(nameserverIp string, port int, message DnsMessage) DnsMessage {
+func SendDnsMessage(nameserverIp netip.Addr, port int, message DnsMessage) DnsMessage {
 	// convert dns message to bytes
 	var datagram bytes.Buffer
 	encoder := NewDnsMessageEncoder(message)

@@ -1,19 +1,22 @@
 package godns
 
+import "net/netip"
+
 type StubResolver struct {
-	Server string
+	server netip.Addr
 	cache  *DnsCache
 }
 
 const CLOUDFLARE_DNS_SERVER = "1.1.1.1"
 
 func NewStubResolver() *StubResolver {
-	resolver := &StubResolver{Server: CLOUDFLARE_DNS_SERVER}
+	ip, _ := netip.ParseAddr(CLOUDFLARE_DNS_SERVER)
+	resolver := &StubResolver{server: ip}
 	return resolver
 }
 
-func (r *StubResolver) WithServer(server string) *StubResolver {
-	r.Server = server
+func (r *StubResolver) WithServer(server netip.Addr) *StubResolver {
+	r.server = server
 	return r
 }
 
@@ -36,7 +39,7 @@ func (r *StubResolver) Resolve(query DnsMessage) DnsMessage {
 	}
 
 	// send the dns message to recursive resolver
-	res := SendDnsMessage(r.Server, UDP_DNS_PORT, query)
+	res := SendDnsMessage(r.server, UDP_DNS_PORT, query)
 
 	// cache the response if successful response
 	r.maybeCache(query, res)

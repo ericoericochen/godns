@@ -25,3 +25,9 @@ Plan
 - [ ] Dockerize DNS UDP Server
 
 - [ ] Encode AAAA RDATA
+
+Run DNS Server on port 53
+
+```
+docker run -p 53:53/udp godns
+```
