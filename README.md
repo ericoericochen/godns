@@ -1,3 +1,37 @@
+# godns
+
+The Domain Name System (DNS) lets clients lookup ip addresses for a hostname or more generally any data associated with a hostname called resource records. This is an implementation of a stub and recursive DNS resolver in Go using only the standard libraries. Each resolver supports a DNS cache with a LFU eviction policy.
+
+We support the following resource records
+
+- A
+- NS
+- CNAME
+- AAAA
+
+## Setup
+
+Make sure to have Go and Docker installed.
+
+To get started with running the DNS resolver server. You can choose which resolver to run by setting the env variable `RESOLVER_TYPE` to `recursive` or `stub`.
+
+Build the docker image.
+
+```bash
+docker build -t godns .
+```
+
+Run the server on UDP port 53.
+
+```bash
+docker run \
+  -p 53:53/udp \
+  -e RESOLVER_TYPE=recursive \
+  godns
+```
+
+## Encoding / Decoding
+
 Capture DNS response from dig.
 
 ```bash
