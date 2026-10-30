@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/netip"
 	"os"
@@ -47,7 +46,12 @@ func buildDnsResolver(config map[string]any, rt resolverType) (godns.DnsResolver
 		}
 	case recursive:
 		{
-
+			rootNameserver := resolverConfig["root_nameserver"].(string)
+			cacheCapacity := int(resolverConfig["cache"].(map[string]any)["capacity"].(float64))
+			resolver := godns.NewRecursiveResolver().
+				WithRootNameserver(rootNameserver).
+				WithCache(godns.NewDnsCache(cacheCapacity))
+			return resolver, nil
 		}
 	}
 
@@ -65,8 +69,6 @@ func buildDnsServer(config map[string]any, rt resolverType) (*godns.DnsServer, e
 }
 
 func main() {
-	fmt.Println(SERVER_CONFIG_FILE)
-
 	// parse the server config file
 	f, err := os.Open(SERVER_CONFIG_FILE)
 	if err != nil {

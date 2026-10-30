@@ -17,6 +17,4 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /app/server ./cmd/server
 # expose port 53
 EXPOSE 53/udp
 
-ENV RESOLVER_TYPE=stub
-
 CMD ["/app/server"]
