@@ -34,15 +34,17 @@ var rcodeMap map[Rcode]string = map[Rcode]string{
 type Type uint8
 
 const (
-	TypeA    Type = 1
-	TypeNS   Type = 2
-	TypeAAAA Type = 28
+	TypeA     Type = 1
+	TypeNS    Type = 2
+	TypeCNAME Type = 5
+	TypeAAAA  Type = 28
 )
 
 var typeNameMap map[Type]string = map[Type]string{
-	TypeA:    "A",
-	TypeNS:   "NS",
-	TypeAAAA: "AAAA",
+	TypeA:     "A",
+	TypeNS:    "NS",
+	TypeCNAME: "CNAME",
+	TypeAAAA:  "AAAA",
 }
 
 // CLASS, QCLASS

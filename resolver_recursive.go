@@ -94,8 +94,27 @@ func (r *RecursiveResolver) resolve(query DnsMessage) DnsMessage {
 
 				// received answer to dns query, STOP
 				if len(res.Answers) > 0 {
-					r.cacheResponse(query, res)
-					return res
+					builder := NewDnsMessageBuilder().From(res).RecursionAvailable(true)
+					var cname string
+					for _, record := range res.Answers {
+						if record.Type == TypeCNAME {
+							cname = record.RData
+							break
+						}
+					}
+
+					if cname != "" {
+						cnameQuery := NewDnsQuery(cname, query.Qtype(), query.Qclass(), true)
+						cnameRes := r.resolve(cnameQuery)
+						builder = builder.
+							Answers(cnameRes.Answers).
+							Authority(cnameRes.Authority).
+							Additional(cnameRes.Additional)
+					}
+
+					finalRes := builder.Build()
+					r.cacheResponse(query, finalRes)
+					return finalRes
 				}
 
 				// cache the referral nameservers and their ip addresses

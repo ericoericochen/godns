@@ -1,6 +1,7 @@
 package godns
 
 import (
+	"bytes"
 	"encoding/binary"
 	"io"
 	"net"
@@ -19,6 +20,13 @@ func NewDnsMessageEncoder(message DnsMessage) *DnsMessageEncoder {
 		cursor:  0,
 		offsets: map[string]int{},
 	}
+}
+
+func Encode(message DnsMessage) []byte {
+	var buf bytes.Buffer
+	encoder := NewDnsMessageEncoder(message)
+	encoder.Write(&buf)
+	return buf.Bytes()
 }
 
 func (e *DnsMessageEncoder) Write(w io.Writer) error {
@@ -103,11 +111,19 @@ func (e *DnsMessageEncoder) writeRecord(record DnsRecord, w io.Writer) error {
 	b = binary.BigEndian.AppendUint16(b, uint16(record.Type))
 	b = binary.BigEndian.AppendUint16(b, uint16(record.Class))
 	b = binary.BigEndian.AppendUint32(b, uint32(record.TTL))
+
+	var encodedRData []byte
+
 	if record.Type == TypeA {
-		encodedRData := encodeIpv4(record.RData)
-		b = binary.BigEndian.AppendUint16(b, uint16(len(encodedRData)))
-		b = append(b, encodedRData...)
+		encodedRData = encodeIpv4(record.RData)
+	} else if record.Type == TypeCNAME {
+		encodedRData = e.encodeName(record.RData)
 	}
+
+	// add the rdlength then the rdata bytes
+	b = binary.BigEndian.AppendUint16(b, uint16(len(encodedRData)))
+	b = append(b, encodedRData...)
+
 	e.cursor += len(b)
 	_, err := w.Write(b)
 	return err

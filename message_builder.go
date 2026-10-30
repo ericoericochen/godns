@@ -47,20 +47,20 @@ func (b *DnsMessageBuilder) Rcode(rcode Rcode) *DnsMessageBuilder {
 }
 
 func (b *DnsMessageBuilder) Answers(answers []DnsRecord) *DnsMessageBuilder {
-	b.message.Answers = answers
-	b.message.Header.Ancount = uint16(len(answers))
+	b.message.Answers = append(b.message.Answers, answers...)
+	b.message.Header.Ancount = uint16(len(b.message.Answers))
 	return b
 }
 
 func (b *DnsMessageBuilder) Authority(authority []DnsRecord) *DnsMessageBuilder {
-	b.message.Authority = authority
-	b.message.Header.Nscount = uint16(len(authority))
+	b.message.Authority = append(b.message.Authority, authority...)
+	b.message.Header.Nscount = uint16(len(b.message.Authority))
 	return b
 }
 
 func (b *DnsMessageBuilder) Additional(additional []DnsRecord) *DnsMessageBuilder {
-	b.message.Additional = additional
-	b.message.Header.Arcount = uint16(len(additional))
+	b.message.Additional = append(b.message.Additional, additional...)
+	b.message.Header.Arcount = uint16(len(b.message.Additional))
 	return b
 }
 

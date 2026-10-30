@@ -23,6 +23,13 @@ func NewDnsMessageDecoder(buffer []byte) *DnsMessageDecoder {
 	return parser
 }
 
+func Decode(buf []byte) (DnsMessage, error) {
+	var message DnsMessage
+	decoder := NewDnsMessageDecoder(buf)
+	err := decoder.Decode(&message)
+	return message, err
+}
+
 func (p *DnsMessageDecoder) Decode(dest *DnsMessage) error {
 	buffer := p.buffer
 
@@ -104,7 +111,17 @@ func (p *DnsMessageDecoder) Decode(dest *DnsMessage) error {
 				return MalformedDNSMessageError
 			}
 			rdata = rd
-
+		} else if recordType == TypeCNAME {
+			// TODO: refactor this so its reusable
+			rd, end, err := p.parseNameFrom(p.idx + 10)
+			if err != nil {
+				return err
+			}
+			// name exceeded rdlength
+			if end != p.idx+10+int(rdlength) {
+				return MalformedDNSMessageError
+			}
+			rdata = rd
 		} else if recordType == TypeAAAA {
 			rdata, err = parseIPv6Address(rdataBuffer)
 		}

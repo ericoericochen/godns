@@ -61,6 +61,8 @@ func (s *DnsServer) process(clientAddr *net.UDPAddr, datagram []byte) {
 	encoder := NewDnsMessageEncoder(response)
 	encoder.Write(&resBuffer)
 
+	fmt.Println("response-length: ", len(resBuffer.Bytes()))
+
 	// send response datagram back to client
 	_, err := s.conn.WriteToUDP(resBuffer.Bytes(), clientAddr)
 	if err != nil {
