@@ -19,7 +19,7 @@ type RecursiveResolver struct {
 	rootNameserver string
 }
 
-const defaultRootNamserver = "a.root-servers.org."
+const defaultRootNamserver = A_ROOT_NAMESERVER
 
 func NewRecursiveResolver() *RecursiveResolver {
 	return &RecursiveResolver{
