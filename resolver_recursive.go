@@ -67,75 +67,69 @@ func (r *RecursiveResolver) resolve(query DnsMessage) DnsMessage {
 
 	// iterate until we have received authoritative answer to dns query
 	for {
-		fail := true
-		nextLoop := false
+		// query against nameserver sequentially, returning the first
+		// non-error response
+		res := r.queryNameservers(query, nameservers)
+		if res.Header.Rcode != RcodeNoError {
+			break
+		}
 
-		// try nameserver and their ips until a successful response
-		for _, nameserver := range nameservers {
-			nsIpv4s := nameserver.ipv4s
+		// received answer
+		if len(res.Answers) > 0 {
+			builder := NewDnsMessageBuilder().From(res).RecursionAvailable(true)
+			cnameRecords := filterRecordsByType(res.Answers, TypeCNAME)
 
-			for _, nsIp := range nsIpv4s {
-				log.Println(fmt.Sprintf("resolving qname=%v qtype=%v qclass=%v with ns %v %v",
+			if len(cnameRecords) > 0 {
+				cname := cnameRecords[0].RData
+				cnameQuery := NewDnsQuery(cname, query.Qtype(), query.Qclass(), true)
+				cnameRes := r.resolve(cnameQuery)
+				builder = builder.
+					Answers(cnameRes.Answers).
+					Authority(cnameRes.Authority).
+					Additional(cnameRes.Additional)
+			}
+
+			finalRes := builder.Build()
+			r.cacheResponse(query, finalRes)
+			return finalRes
+		}
+
+		// get the next set of nameservers to query
+		nextNameservers := r.getNextNameservers(res)
+		nameservers = nextNameservers
+	}
+
+	return toServerFailureResponse(query)
+}
+
+func (r *RecursiveResolver) queryNameservers(query DnsMessage, nameservers []nameserverData) DnsMessage {
+	for _, nameserver := range nameservers {
+		for _, nsIp := range nameserver.ipv4s {
+			log.Println(fmt.Sprintf("resolving qname=%v qtype=%v qclass=%v with ns %v %v",
+				query.Qname(),
+				typeNameMap[query.Qtype()],
+				classNameMap[query.Qclass()],
+				nameserver.name,
+				nsIp))
+
+			// query the dns nameserver
+			res := SendDnsMessage(nsIp, UDP_DNS_PORT, query)
+
+			// if fail, try the next nameserver ip
+			if res.Header.Rcode != RcodeNoError {
+				log.Println(fmt.Sprintf("error from resolving qname=%v qtype=%v qclass=%v with ns %v %v",
 					query.Qname(),
 					typeNameMap[query.Qtype()],
 					classNameMap[query.Qclass()],
 					nameserver.name,
 					nsIp))
-
-				// query the dns nameserver
-				res := SendDnsMessage(nsIp, UDP_DNS_PORT, query)
-
-				// if fail, try the next nameserver ip
-				if res.Header.Rcode != RcodeNoError {
-					continue
-				}
-
-				fail = false
-
-				// received answer to dns query, STOP
-				if len(res.Answers) > 0 {
-					builder := NewDnsMessageBuilder().From(res).RecursionAvailable(true)
-					var cname string
-					for _, record := range res.Answers {
-						if record.Type == TypeCNAME {
-							cname = record.RData
-							break
-						}
-					}
-
-					if cname != "" {
-						cnameQuery := NewDnsQuery(cname, query.Qtype(), query.Qclass(), true)
-						cnameRes := r.resolve(cnameQuery)
-						builder = builder.
-							Answers(cnameRes.Answers).
-							Authority(cnameRes.Authority).
-							Additional(cnameRes.Additional)
-					}
-
-					finalRes := builder.Build()
-					r.cacheResponse(query, finalRes)
-					return finalRes
-				}
-
-				// cache the referral nameservers and their ip addresses
-				// query against those nameservers next in the loop
-				nextNameservers := r.getNextNameservers(res)
-				nameservers = nextNameservers
-				nextLoop = true
-				break
+				continue
 			}
 
-			if nextLoop {
-				break
-			}
-		}
-
-		if fail {
-			break
+			return res
 		}
 	}
-
-	return toResponse(query, RcodeServerFailure)
+	return toServerFailureResponse(query)
 }
 
 func (r *RecursiveResolver) getBestStartingNameservers(qname string) []nameserverData {
