@@ -12,7 +12,9 @@ func printByte(b byte) {
 }
 
 func main() {
-	data, err := os.ReadFile("response.bin")
+	// data, err := os.ReadFile("fixtures/response.bin")
+	// data, err := os.ReadFile("fixtures/www.google.com.bin")
+	data, err := os.ReadFile("fixtures/en.wikipedia.org.bin")
 	if err != nil {
 		panic(err)
 	}
@@ -23,12 +25,4 @@ func main() {
 	err = parser.Decode(message)
 
 	fmt.Println(message)
-
-	// for _, record := range message.Answers {
-	// 	fmt.Println(record)
-	// }
-	// fmt.Println("---")
-	// for _, record := range message.Additional {
-	// 	fmt.Println(record)
-	// }
 }

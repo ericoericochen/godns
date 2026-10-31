@@ -1,0 +1,18 @@
+; <<>> DiG 9.10.6 <<>> @1.1.1.1 en.wikipedia.org A +noedns
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 35270
+;; flags: qr rd ra; QUERY: 1, ANSWER: 2, AUTHORITY: 0, ADDITIONAL: 0
+
+;; QUESTION SECTION:
+;en.wikipedia.org.              IN      A
+
+;; ANSWER SECTION:
+en.wikipedia.org.       86181   IN      CNAME   dyna.wikimedia.org.
+dyna.wikimedia.org.     141     IN      A       208.80.153.224
+
+;; Query time: 13 msec
+;; SERVER: 1.1.1.1#53(1.1.1.1)
+;; WHEN: Sat Oct 31 14:01:14 EDT 2026
+;; MSG SIZE  rcvd: 79

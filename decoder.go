@@ -11,9 +11,9 @@ var MalformedRDataError = errors.New("Malformed RData")
 var ReadExceedsBufferLengthError = errors.New("Read Exceeds Buffer Length")
 
 type DnsMessageDecoder struct {
-	buffer        []byte // dns message bytes
-	idx           int    // cursor pointer
-	offsetsToName map[int]string
+	buffer        []byte         // dns message bytes
+	idx           int            // cursor pointer
+	offsetsToName map[int]string // map of offset idx in buffer to name
 }
 
 func NewDnsMessageDecoder(buffer []byte) *DnsMessageDecoder {
@@ -61,11 +61,30 @@ func (p *DnsMessageDecoder) seek(idx int) {
 	p.idx = idx
 }
 
-func (p *DnsMessageDecoder) Decode(dest *DnsMessage) error {
-	buffer := p.buffer
+func (p *DnsMessageDecoder) step(steps int) {
+	p.idx += steps
+}
 
-	// parse dns header
-	// 12 bytes
+func (p *DnsMessageDecoder) readUint16() (uint16, error) {
+	bytes, err := p.readRange(p.idx, 2)
+	if err != nil {
+		return 0, err
+	}
+	p.step(2)
+	return binary.BigEndian.Uint16(bytes), nil
+}
+
+func (p *DnsMessageDecoder) readUint32() (uint32, error) {
+	bytes, err := p.readRange(p.idx, 4)
+	if err != nil {
+		return 0, err
+	}
+	p.step(4)
+	return binary.BigEndian.Uint32(bytes), nil
+}
+
+func (p *DnsMessageDecoder) Decode(dest *DnsMessage) error {
+	// parse dns header 12 bytes
 
 	// parse transaction id
 	idBytes, err := p.readRange(0, 2)
@@ -99,12 +118,25 @@ func (p *DnsMessageDecoder) Decode(dest *DnsMessage) error {
 		return MalformedDNSMessageError
 	}
 	rcode := raPrefixByte & 0b111
+	p.seek(4)
 
 	// parse qdcount, ancount, nscount, arcount
-	qdcount := binary.BigEndian.Uint16(buffer[4:6])
-	ancount := binary.BigEndian.Uint16(buffer[6:8])
-	nscount := binary.BigEndian.Uint16(buffer[8:10])
-	arcount := binary.BigEndian.Uint16(buffer[10:12])
+	qdcount, err := p.readUint16()
+	if err != nil {
+		return err
+	}
+	ancount, err := p.readUint16()
+	if err != nil {
+		return err
+	}
+	nscount, err := p.readUint16()
+	if err != nil {
+		return err
+	}
+	arcount, err := p.readUint16()
+	if err != nil {
+		return err
+	}
 
 	// assemble header
 	dnsHeader := DnsHeader{}
@@ -123,22 +155,34 @@ func (p *DnsMessageDecoder) Decode(dest *DnsMessage) error {
 	dnsHeader.Arcount = arcount
 
 	// parse questions section
-	p.seek(12)
 	questions := []DnsQuestion{}
 	for i := 0; i < int(qdcount); i++ {
 		qname, err := p.parseName()
 		if err != nil {
 			return err
 		}
-		qtype := Type(binary.BigEndian.Uint16(buffer[p.idx : p.idx+2]))
-		qclass := Class(binary.BigEndian.Uint16(buffer[p.idx+2 : p.idx+4]))
+
+		// parse qtype
+		qtype16, err := p.readUint16()
+		if err != nil {
+			return err
+		}
+		qtype := Type(qtype16)
+
+		// parse qclass
+		qclass16, err := p.readUint16()
+		if err != nil {
+			return err
+		}
+		qclass := Class(qclass16)
+
+		// assemble question = qname, qtype, qclass
 		question := DnsQuestion{
 			Qname:  qname,
 			Qtype:  qtype,
 			Qclass: qclass,
 		}
 		questions = append(questions, question)
-		p.idx += 4
 	}
 
 	// parse answer, authority, and additional sections
@@ -150,37 +194,43 @@ func (p *DnsMessageDecoder) Decode(dest *DnsMessage) error {
 		if err != nil {
 			return err
 		}
-		recordType := Type(binary.BigEndian.Uint16(buffer[p.idx : p.idx+2]))
-		class := Class(binary.BigEndian.Uint16(buffer[p.idx+2 : p.idx+4]))
-		ttl := binary.BigEndian.Uint32(buffer[p.idx+4 : p.idx+8])
-		rdlength := binary.BigEndian.Uint16(buffer[p.idx+8 : p.idx+10])
-		rdataBuffer := buffer[p.idx+10 : p.idx+10+int(rdlength)]
+
+		// parse record type
+		recordType16, err := p.readUint16()
+		if err != nil {
+			return err
+		}
+		recordType := Type(recordType16)
+
+		// parse class
+		class16, err := p.readUint16()
+		if err != nil {
+			return err
+		}
+		class := Class(class16)
+
+		// parse ttl
+		ttl, err := p.readUint32()
+		if err != nil {
+			return err
+		}
+
+		// parse rdlength
+		rdlength, err := p.readUint16()
+		if err != nil {
+			return err
+		}
+
+		// parse rdata
+		rdataBuffer, err := p.readRange(p.idx, int(rdlength))
 
 		var rdata string
 		if recordType == TypeA {
 			rdata, err = parseIPv4Address(rdataBuffer)
 		} else if recordType == TypeNS {
-			// clean this up later
-			rd, end, err := p.parseNameFrom(p.idx + 10)
-			if err != nil {
-				return err
-			}
-			// name exceeded rdlength
-			if end != p.idx+10+int(rdlength) {
-				return MalformedDNSMessageError
-			}
-			rdata = rd
+			rdata, err = p.parseNameRData(int(rdlength))
 		} else if recordType == TypeCNAME {
-			// TODO: refactor this so its reusable
-			rd, end, err := p.parseNameFrom(p.idx + 10)
-			if err != nil {
-				return err
-			}
-			// name exceeded rdlength
-			if end != p.idx+10+int(rdlength) {
-				return MalformedDNSMessageError
-			}
-			rdata = rd
+			rdata, err = p.parseNameRData(int(rdlength))
 		} else if recordType == TypeAAAA {
 			rdata, err = parseIPv6Address(rdataBuffer)
 		}
@@ -197,7 +247,7 @@ func (p *DnsMessageDecoder) Decode(dest *DnsMessage) error {
 			RData: rdata,
 		}
 		records = append(records, record)
-		p.idx += 10 + int(rdlength)
+		p.step(int(rdlength))
 	}
 
 	// build dns message
@@ -216,59 +266,104 @@ func (p *DnsMessageDecoder) parseName() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	p.idx = idx
+	p.seek(idx)
 	return name, err
 }
 
 // parse the name starting from `idx`
 func (p *DnsMessageDecoder) parseNameFrom(idx int) (string, int, error) {
 	name := ""
-	initialOffset := idx
-	for p.buffer[idx] != byte(0) {
+	initialOffset := idx // save the initial idx so we can cache the offset -> name mapping
+	end := -1            // end is unset to -1
+	jumps := 0
+
+	for {
+		// prevent infinite message ptr loops
+		if jumps == 5 {
+			return "", 0, MalformedRDataError
+		}
+
+		// read the byte, break if 0 byte (end of name)
+		b, err := p.readAt(idx)
+		if err != nil {
+			return "", 0, err
+		}
+		if b == byte(0) {
+			if end == -1 {
+				// advance idx by 1 to get the idx of the byte
+				// after the 0 byte
+				end = idx + 1
+			}
+			break
+		}
+
 		// is label or message compression pointer
-		first := p.buffer[idx]
-		if isLabelByte(first) {
-			length := int(first)
+		if isLabelByte(b) {
+			// parse <length><char x length> and add to name
+			length := int(b)
 			start := idx + 1
-			end := start + length
-			domain := string(p.buffer[start:end])
+			domainBytes, err := p.readRange(start, length)
+			if err != nil {
+				return "", 0, err
+			}
+			domain := string(domainBytes)
 			name += domain + "."
-			idx = end
-		} else if isMessagePointerByte(first) {
+			// move idx to next label to parse
+			idx = start + length
+		} else if isMessagePointerByte(b) {
+			// read the first 2 bytes
 			idx += 1
+			nb, err := p.readAt(idx)
+			if err != nil {
+				return "", 0, err
+			}
+			// message ptr marks the end of name bytes
+			if end == -1 {
+				// move idx by 1 pass the last message ptr byte
+				end = idx + 1
+			}
+			// set the first 11 of first byte to 00 and parse offset
 			offset := binary.BigEndian.Uint16([]byte{
-				first & byte(0b00111111),
-				p.buffer[idx],
+				b & byte(0b00111111), nb,
 			})
+			// check if we have cached the name at the offset
+			// if not we have to jump to the offset and get the name
 			domain, exists := p.offsetsToName[int(offset)]
 			if exists {
 				name += domain
+				break
 			} else {
-				// recursively read name from offset
-				domain, _, err := p.parseNameFrom(int(offset))
-				if err != nil {
-					return "", 0, MalformedDNSMessageError
-				}
-				name += domain
+				idx = int(offset)
+				jumps += 1
+				continue
 			}
-
-			break
 		}
 	}
 
+	// cache the offset -> name finding
 	p.offsetsToName[initialOffset] = name
+	return name, end, nil
+}
 
-	// advance idx by 1 to segment after name
-	idx += 1
-	return name, idx, nil
+func (p *DnsMessageDecoder) parseNameRData(rdlength int) (string, error) {
+	start := p.idx
+	rd, end, err := p.parseNameFrom(start)
+	if err != nil {
+		return "", err
+	}
+	if end != start+rdlength {
+		return "", MalformedDNSMessageError
+	}
+	return rd, nil
 }
 
 func isLabelByte(b byte) bool {
 	return (b >> 6) == 0
 }
 
+// message pointer bytes start with 11
 func isMessagePointerByte(b byte) bool {
-	return b == byte(0b11000000)
+	return b&byte(0b11000000) == 0b11000000
 }
 
 func parseIPv4Address(buffer []byte) (string, error) {
