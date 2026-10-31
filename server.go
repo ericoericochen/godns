@@ -47,9 +47,17 @@ func (s *DnsServer) process(clientAddr *net.UDPAddr, datagram []byte) {
 	fmt.Println(datagram)
 
 	// parse dns message
-	var query DnsMessage
-	decoder := NewDnsMessageDecoder(datagram)
-	decoder.Decode(&query)
+	query, err := Decode(datagram)
+	if err != nil {
+		fmt.Println("error: ", err)
+	}
+
+	// var query DnsMessage
+	// decoder := NewDnsMessageDecoder(datagram)
+	// decoder.Decode(&query)
+
+	fmt.Println("query: ")
+	fmt.Println(query)
 
 	// query resolver
 	response := s.resolver.Resolve(query)
@@ -64,7 +72,7 @@ func (s *DnsServer) process(clientAddr *net.UDPAddr, datagram []byte) {
 	fmt.Println("response-length: ", len(resBuffer.Bytes()))
 
 	// send response datagram back to client
-	_, err := s.conn.WriteToUDP(resBuffer.Bytes(), clientAddr)
+	_, err = s.conn.WriteToUDP(resBuffer.Bytes(), clientAddr)
 	if err != nil {
 		log.Println("write error: ", err)
 	}

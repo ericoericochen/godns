@@ -115,14 +115,15 @@ func (e *DnsMessageEncoder) writeQuestion(question DnsQuestion, w io.Writer) err
 }
 
 func (e *DnsMessageEncoder) writeRecord(record DnsRecord, w io.Writer) error {
+	start := e.cursor
 	b := []byte{}
 	b = append(b, e.encodeName(record.Name)...)
 	b = binary.BigEndian.AppendUint16(b, uint16(record.Type))
 	b = binary.BigEndian.AppendUint16(b, uint16(record.Class))
 	b = binary.BigEndian.AppendUint32(b, uint32(record.TTL))
+	e.cursor += len(b) + 2
 
 	var encodedRData []byte
-
 	if record.Type == TypeA {
 		encodedRData = encodeIpv4(record.RData)
 	} else if record.Type == TypeCNAME {
@@ -133,7 +134,8 @@ func (e *DnsMessageEncoder) writeRecord(record DnsRecord, w io.Writer) error {
 	b = binary.BigEndian.AppendUint16(b, uint16(len(encodedRData)))
 	b = append(b, encodedRData...)
 
-	e.cursor += len(b)
+	e.cursor = start + len(b)
+	// e.cursor += len(b)
 	_, err := w.Write(b)
 	return err
 }

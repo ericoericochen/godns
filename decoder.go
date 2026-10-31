@@ -113,10 +113,6 @@ func (p *DnsMessageDecoder) Decode(dest *DnsMessage) error {
 
 	ra := (raPrefixByte>>7)&1 == 1
 	z := (raPrefixByte >> 4) & 0b111
-	// Z must be 0 for query and response
-	if z != 0 {
-		return MalformedDNSMessageError
-	}
 	rcode := raPrefixByte & 0b111
 	p.seek(4)
 

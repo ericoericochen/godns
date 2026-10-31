@@ -15,6 +15,8 @@ func main() {
 
 	// build query dns message
 	message := godns.NewDnsQuery(qname, qtype, qclass, false)
+	fmt.Println("query: ")
+	fmt.Println(message)
 	res := resolver.Resolve(message)
 	fmt.Println("------")
 
