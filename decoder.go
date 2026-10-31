@@ -8,6 +8,7 @@ import (
 
 var MalformedDNSMessageError = errors.New("Malformed DNS Message")
 var MalformedRDataError = errors.New("Malformed RData")
+var ReadExceedsBufferLengthError = errors.New("Read Exceeds Buffer Length")
 
 type DnsMessageDecoder struct {
 	buffer        []byte // dns message bytes
@@ -30,24 +31,82 @@ func Decode(buf []byte) (DnsMessage, error) {
 	return message, err
 }
 
+// cursor manipulation and read methods
+
+// get the length of the buffer
+func (p *DnsMessageDecoder) size() int {
+	return len(p.buffer)
+}
+
+// read a range of bytes, returns the byte slice.
+// returns an error if the range exceeds the size of the buffer.
+func (p *DnsMessageDecoder) readRange(start, length int) ([]byte, error) {
+	if start+length > p.size() {
+		return nil, ReadExceedsBufferLengthError
+	}
+	return p.buffer[start : start+length], nil
+}
+
+// read a byte at a specified index
+// returns an error if the idx is beyond the buffer size
+func (p *DnsMessageDecoder) readAt(idx int) (byte, error) {
+	if idx >= p.size() {
+		return 0, ReadExceedsBufferLengthError
+	}
+	return p.buffer[idx], nil
+}
+
+// set the current idx position
+func (p *DnsMessageDecoder) seek(idx int) {
+	p.idx = idx
+}
+
 func (p *DnsMessageDecoder) Decode(dest *DnsMessage) error {
 	buffer := p.buffer
 
 	// parse dns header
 	// 12 bytes
-	id := binary.BigEndian.Uint16(buffer[:2])
-	qr := (buffer[2]>>7)&1 == 1
-	opcode := (buffer[2] >> 4) & 0b111
-	aa := (buffer[2]>>2)&1 == 1
-	tc := (buffer[2]>>1)&1 == 1
-	rd := (buffer[2] & 1) == 1
-	ra := (buffer[3]>>7)&1 == 1
-	z := (buffer[3] >> 4) & 0b111
-	rcode := buffer[3] & 0b111
+
+	// parse transaction id
+	idBytes, err := p.readRange(0, 2)
+	if err != nil {
+		return err
+	}
+	id := binary.BigEndian.Uint16(idBytes)
+
+	// parse qr prefix byte
+	qrPrefixByte, err := p.readAt(2)
+	if err != nil {
+		return err
+	}
+
+	qr := (qrPrefixByte>>7)&1 == 1
+	opcode := (qrPrefixByte >> 4) & 0b111
+	aa := (qrPrefixByte>>2)&1 == 1
+	tc := (qrPrefixByte>>1)&1 == 1
+	rd := (qrPrefixByte & 1) == 1
+
+	// parse ra prefix byte
+	raPrefixByte, err := p.readAt(3)
+	if err != nil {
+		return err
+	}
+
+	ra := (raPrefixByte>>7)&1 == 1
+	z := (raPrefixByte >> 4) & 0b111
+	// Z must be 0 for query and response
+	if z != 0 {
+		return MalformedDNSMessageError
+	}
+	rcode := raPrefixByte & 0b111
+
+	// parse qdcount, ancount, nscount, arcount
 	qdcount := binary.BigEndian.Uint16(buffer[4:6])
 	ancount := binary.BigEndian.Uint16(buffer[6:8])
 	nscount := binary.BigEndian.Uint16(buffer[8:10])
 	arcount := binary.BigEndian.Uint16(buffer[10:12])
+
+	// assemble header
 	dnsHeader := DnsHeader{}
 	dnsHeader.ID = id
 	dnsHeader.QR = qr
@@ -64,8 +123,8 @@ func (p *DnsMessageDecoder) Decode(dest *DnsMessage) error {
 	dnsHeader.Arcount = arcount
 
 	// parse questions section
+	p.seek(12)
 	questions := []DnsQuestion{}
-	p.idx = 12
 	for i := 0; i < int(qdcount); i++ {
 		qname, err := p.parseName()
 		if err != nil {

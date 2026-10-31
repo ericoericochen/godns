@@ -70,7 +70,7 @@ func (e *DnsMessageEncoder) writeHeader(w io.Writer) error {
 	opcode := byte(header.Opcode)
 	qrByte |= opcode << 3
 
-	// encode ra
+	// encode rd
 	if header.RecursionDesired {
 		qrByte |= 1
 	}
@@ -79,6 +79,15 @@ func (e *DnsMessageEncoder) writeHeader(w io.Writer) error {
 
 	// ra, z, rcode
 	raByte := byte(0)
+
+	// encode ra
+	if header.RecursionAvailable {
+		raByte |= 0b10000000
+	}
+
+	// encode rcode
+	raByte |= byte(header.Rcode)
+
 	b = append(b, raByte)
 
 	// encode qdcount, ancount, nscount, arcount
