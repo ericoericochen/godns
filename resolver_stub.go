@@ -1,6 +1,9 @@
 package godns
 
-import "net/netip"
+import (
+	"log"
+	"net/netip"
+)
 
 type StubResolver struct {
 	server netip.Addr
@@ -35,6 +38,7 @@ func (r *StubResolver) Resolve(query DnsMessage) DnsMessage {
 	// try to get cached response
 	cachedMessage := r.getCached(query)
 	if cachedMessage != nil {
+		log.Println("cache hit")
 		return *cachedMessage
 	}
 

@@ -1,10 +1,10 @@
 package godns
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"net"
+	"time"
 )
 
 type DnsServer struct {
@@ -43,38 +43,38 @@ func (s *DnsServer) Listen(port int) error {
 }
 
 func (s *DnsServer) process(clientAddr *net.UDPAddr, datagram []byte) {
-	fmt.Println(clientAddr)
-	fmt.Println(datagram)
+	log.Println(fmt.Sprintf("received dns query from %v", clientAddr))
 
 	// parse dns message
+	start := time.Now()
 	query, err := Decode(datagram)
 	if err != nil {
-		fmt.Println("error: ", err)
+		log.Println("error decoding dns query")
+		return
 	}
 
-	// var query DnsMessage
-	// decoder := NewDnsMessageDecoder(datagram)
-	// decoder.Decode(&query)
-
-	fmt.Println("query: ")
-	fmt.Println(query)
+	log.Println(fmt.Sprintf("qname=%v, qtype=%v, qclass=%v",
+		query.Qname(),
+		typeNameMap[query.Qtype()],
+		classNameMap[query.Qclass()]))
 
 	// query resolver
 	response := s.resolver.Resolve(query)
+	elapsed := time.Since(start)
 
-	fmt.Println(response)
+	log.Println(fmt.Sprintf("took %v", elapsed))
+	log.Println(fmt.Sprintf("response rcode=%v, answers=%v, authority=%v, additional=%v",
+		rcodeMap[response.Header.Rcode],
+		len(response.Answers),
+		len(response.Authority),
+		len(response.Additional)))
 
 	// encode response dns message
-	var resBuffer bytes.Buffer
-	encoder := NewDnsMessageEncoder(response)
-	encoder.Write(&resBuffer)
-
-	fmt.Println("response-length: ", len(resBuffer.Bytes()))
+	resBuffer := Encode(response)
 
 	// send response datagram back to client
-	_, err = s.conn.WriteToUDP(resBuffer.Bytes(), clientAddr)
+	_, err = s.conn.WriteToUDP(resBuffer, clientAddr)
 	if err != nil {
-		log.Println("write error: ", err)
+		log.Println("failed to send response: ", err)
 	}
-
 }

@@ -54,6 +54,7 @@ func (r *RecursiveResolver) resolve(query DnsMessage) DnsMessage {
 	// check if query response is cached
 	res, cached := r.getCachedResponse(query)
 	if cached {
+		log.Println("cache hit")
 		return *res
 	}
 

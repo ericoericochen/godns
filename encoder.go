@@ -135,7 +135,6 @@ func (e *DnsMessageEncoder) writeRecord(record DnsRecord, w io.Writer) error {
 	b = append(b, encodedRData...)
 
 	e.cursor = start + len(b)
-	// e.cursor += len(b)
 	_, err := w.Write(b)
 	return err
 }
