@@ -1,0 +1,7 @@
+{
+  "droplet": "godns",
+  "env": {
+    "RESOLVER_TYPE": "recursive"
+  },
+  "port": "53/udp"
+}
