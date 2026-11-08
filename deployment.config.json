@@ -1,5 +1,8 @@
 {
-  "droplet": "godns",
+  "name": "godns",
+  "region": "nyc1",
+  "size": "s-1vcpu-512mb-10gb",
+  "image": "ubuntu-24-04-x64",
   "env": {
     "RESOLVER_TYPE": "recursive"
   },
