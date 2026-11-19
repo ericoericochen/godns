@@ -13,8 +13,12 @@ const DIGITAL_OCEAN_TOKEN = "DIGITAL_OCEAN_TOKEN"
 const DEPLOYMENT_CONFIG_FILE = "deployment.config.json"
 
 type DeploymentConfig struct {
-	Name string            `json:"name"`
-	Env  map[string]string `json:"env"`
+	Name   string            `json:"name"`
+	Region string            `json:"region"`
+	Size   string            `json:"size"`
+	Image  string            `json:"image"`
+	Env    map[string]string `json:"env"`
+	Port   string            `json:"port"`
 }
 
 func loadDeploymentConfig() DeploymentConfig {
@@ -31,7 +35,7 @@ func loadDeploymentConfig() DeploymentConfig {
 	return deploymentConfig
 }
 
-func getOrCreateDropletIfNotExists() {
+func getOrCreateDropletIfNotExists(client *godo.Client, ctx context.Context, config DeploymentConfig) {
 
 }
 

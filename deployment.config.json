@@ -4,7 +4,8 @@
   "size": "s-1vcpu-512mb-10gb",
   "image": "ubuntu-24-04-x64",
   "env": {
-    "RESOLVER_TYPE": "recursive"
+    "DNS_RESOLVER_TYPE": "recursive",
+    "DNS_CACHE_CAPACITY": "10000"
   },
   "port": "53/udp"
 }
