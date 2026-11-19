@@ -11,7 +11,6 @@ RUN go mod download
 # copy the shared package, server command, and runtime config
 COPY *.go ./
 COPY cmd/server/ ./cmd/server/
-COPY server.config.json ./
 
 # build
 RUN CGO_ENABLED=0 GOOS=linux go build -o /app/server ./cmd/server

@@ -34,7 +34,7 @@ Run the server on UDP port 53.
 ```bash
 docker run \
   -p 53:53/udp \
-  -e RESOLVER_TYPE=recursive \
+  -e DNS_RESOLVER_TYPE=recursive \
   godns
 ```
 
@@ -46,7 +46,7 @@ dig @127.0.0.1 www.google.com A +noedns
 
 ## Project Layout
 
-```graphql
+```bash
 .
 ├── cmd
 │   └── server

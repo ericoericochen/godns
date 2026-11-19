@@ -1,16 +1,22 @@
 package main
 
 import (
-	"encoding/json"
+	"errors"
 	"log"
 	"net/netip"
 	"os"
+	"strconv"
 
 	"github.com/ericoericochen/godns"
 )
 
 const SERVER_CONFIG_FILE = "./server.config.json"
-const RESOLVER_TYPE_ENV = "RESOLVER_TYPE"
+const DNS_RESOLVER_TYPE_ENV = "DNS_RESOLVER_TYPE"
+const DNS_CACHE_CAPACITY_ENV = "DNS_CACHE_CAPACITY"
+const DNS_ROOT_NAMESERVER_ENV = "DNS_ROOT_NAMESERVER"
+const DNS_STUB_NAMESERVER_ENV = "DNS_STUB_NAMESERVER"
+
+const DEFAULT_DNS_ROOT_NAMESERVER = "a.root-servers.net."
 
 type resolverType string
 
@@ -19,22 +25,52 @@ const (
 	recursive resolverType = "recursive"
 )
 
-func getResolverType() resolverType {
-	value, exists := os.LookupEnv(RESOLVER_TYPE_ENV)
+var invalidDnsResolverType = errors.New("invalid dns resolver type")
+
+func getDNSResolverType() resolverType {
+	value, exists := os.LookupEnv(DNS_RESOLVER_TYPE_ENV)
 	if !exists {
 		return recursive
 	}
 	return resolverType(value)
 }
 
-func buildDnsResolver(config map[string]any, rt resolverType) (godns.DnsResolver, error) {
-	resolverConfig := config[string(rt)].(map[string]any)
+func getDNSCacheCapacity() int {
+	value, exists := os.LookupEnv(DNS_CACHE_CAPACITY_ENV)
+	if !exists {
+		return 1000
+	}
+	capacity, err := strconv.Atoi(value)
+	if err != nil {
+		panic(err)
+	}
+	return capacity
+}
+
+func getDNSRootNameserver() string {
+	value, exists := os.LookupEnv(DNS_ROOT_NAMESERVER_ENV)
+	if !exists {
+		return DEFAULT_DNS_ROOT_NAMESERVER
+	}
+	return value
+}
+
+func getDNSStubNameserver() string {
+	value, exists := os.LookupEnv(DNS_STUB_NAMESERVER_ENV)
+	if !exists {
+		return godns.CLOUDFLARE_DNS_SERVER
+	}
+	return value
+}
+
+func buildDnsResolverFromEnv() (godns.DnsResolver, error) {
+	rt := getDNSResolverType()
+	cacheCapacity := getDNSCacheCapacity()
 
 	switch rt {
 	case stub:
 		{
-			server := resolverConfig["server"].(string)
-			cacheCapacity := int(resolverConfig["cache"].(map[string]any)["capacity"].(float64))
+			server := getDNSStubNameserver()
 			serverIp, err := netip.ParseAddr(server)
 			if err != nil {
 				return nil, err
@@ -46,8 +82,7 @@ func buildDnsResolver(config map[string]any, rt resolverType) (godns.DnsResolver
 		}
 	case recursive:
 		{
-			rootNameserver := resolverConfig["root_nameserver"].(string)
-			cacheCapacity := int(resolverConfig["cache"].(map[string]any)["capacity"].(float64))
+			rootNameserver := getDNSRootNameserver()
 			resolver := godns.NewRecursiveResolver().
 				WithRootNameserver(rootNameserver).
 				WithCache(godns.NewDnsCache(cacheCapacity))
@@ -55,11 +90,11 @@ func buildDnsResolver(config map[string]any, rt resolverType) (godns.DnsResolver
 		}
 	}
 
-	return nil, nil
+	return nil, invalidDnsResolverType
 }
 
-func buildDnsServer(config map[string]any, rt resolverType) (*godns.DnsServer, error) {
-	resolver, err := buildDnsResolver(config, rt)
+func buildDnsServerFromEnv() (*godns.DnsServer, error) {
+	resolver, err := buildDnsResolverFromEnv()
 	if err != nil {
 		log.Println("Failed to initialize dns resolver")
 		return nil, err
@@ -69,23 +104,8 @@ func buildDnsServer(config map[string]any, rt resolverType) (*godns.DnsServer, e
 }
 
 func main() {
-	// parse the server config file
-	f, err := os.Open(SERVER_CONFIG_FILE)
-	if err != nil {
-		log.Println("Failed to start server. Unable to open server.config.json.")
-	}
-	defer f.Close()
-	var config map[string]any
-
-	if err := json.NewDecoder(f).Decode(&config); err != nil {
-		log.Println("Failed to start server. Unable to parse server.config.json.")
-	}
-
-	// get the resolver type
-	rt := getResolverType()
-
 	// build the server
-	server, err := buildDnsServer(config, rt)
+	server, err := buildDnsServerFromEnv()
 
 	if err != nil {
 		log.Println("Failed to initialize dns server")
