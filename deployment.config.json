@@ -1,12 +1,11 @@
 {
   "name": "godns",
-  "region": "nyc1",
+  "region": "sfo2",
   "size": "s-1vcpu-512mb-10gb",
   "image": "ubuntu-24-04-x64",
   "env": {
     "DNS_RESOLVER_TYPE": "recursive",
     "DNS_CACHE_CAPACITY": "10000",
     "DNS_ROOT_NAMESERVER": "e.root-servers.net."
-  },
-  "port": "53/udp"
+  }
 }
