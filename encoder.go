@@ -126,6 +126,10 @@ func (e *DnsMessageEncoder) writeRecord(record DnsRecord, w io.Writer) error {
 	var encodedRData []byte
 	if record.Type == TypeA {
 		encodedRData = encodeIpv4(record.RData)
+	} else if record.Type == TypeAAAA {
+		encodedRData = encodeIpv6(record.RData)
+	} else if record.Type == TypeNS {
+		encodedRData = e.encodeName(record.RData)
 	} else if record.Type == TypeCNAME {
 		encodedRData = e.encodeName(record.RData)
 	}
@@ -166,5 +170,10 @@ func (e *DnsMessageEncoder) encodeName(name string) []byte {
 
 func encodeIpv4(ipv4 string) []byte {
 	ip := net.ParseIP(ipv4).To4()
+	return []byte(ip)
+}
+
+func encodeIpv6(ipv6 string) []byte {
+	ip := net.ParseIP(ipv6).To16()
 	return []byte(ip)
 }

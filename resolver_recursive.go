@@ -75,6 +75,8 @@ func (r *RecursiveResolver) resolve(query DnsMessage) DnsMessage {
 			break
 		}
 
+		fmt.Println(res)
+
 		// received answer
 		if len(res.Answers) > 0 {
 			builder := NewDnsMessageBuilder().From(res).RecursionAvailable(true)
