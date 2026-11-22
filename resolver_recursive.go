@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/netip"
 	"slices"
-	"strings"
 )
 
 type nameserverData struct {
@@ -79,20 +78,29 @@ func (r *RecursiveResolver) resolve(query DnsMessage) DnsMessage {
 
 		// received answer
 		if len(res.Answers) > 0 {
-			builder := NewDnsMessageBuilder().From(res).RecursionAvailable(true)
 			cnameRecords := filterRecordsByType(res.Answers, TypeCNAME)
 
-			if len(cnameRecords) > 0 {
-				cname := cnameRecords[0].RData
-				cnameQuery := NewDnsQuery(cname, query.Qtype(), query.Qclass(), true)
-				cnameRes := r.resolve(cnameQuery)
-				builder = builder.
-					Answers(cnameRes.Answers).
-					Authority(cnameRes.Authority).
-					Additional(cnameRes.Additional)
+			// if there are no cname records, we have got the answer to the query
+			if len(cnameRecords) == 0 {
+				res.Header.RecursionAvailable = true
+				return res
 			}
 
+			cname := cnameRecords[0].RData
+			cnameQuery := NewDnsQuery(cname, query.Qtype(), query.Qclass())
+			fmt.Println("cname query: ")
+			fmt.Println(cnameQuery)
+			cnameRes := r.resolve(cnameQuery)
+
+			fmt.Println("cname res: ")
+			fmt.Println(cnameRes)
+			builder := NewDnsMessageBuilder().From(res).RecursionAvailable(true)
+			builder = builder.
+				Answers(cnameRes.Answers)
+
 			finalRes := builder.Build()
+			finalRes.Header.Nscount = 0
+			finalRes.Authority = []DnsRecord{}
 			r.cacheResponse(query, finalRes)
 			return finalRes
 		}
@@ -100,6 +108,8 @@ func (r *RecursiveResolver) resolve(query DnsMessage) DnsMessage {
 		// get the next set of nameservers to query
 		nextNameservers := r.getNextNameservers(res)
 		nameservers = nextNameservers
+		fmt.Println("next nameservers: ")
+		fmt.Println(nameservers)
 	}
 
 	return toServerFailureResponse(query)
@@ -107,6 +117,18 @@ func (r *RecursiveResolver) resolve(query DnsMessage) DnsMessage {
 
 func (r *RecursiveResolver) queryNameservers(query DnsMessage, nameservers []nameserverData) DnsMessage {
 	for _, nameserver := range nameservers {
+		numIpv4s := len(nameserver.ipv4s)
+		if numIpv4s == 0 {
+			fmt.Println("no ipv4s for nameserver")
+			nameserverQuery := NewDnsQuery(nameserver.name, TypeA, ClassIN)
+			nameserverRes := r.resolve(nameserverQuery)
+			fmt.Println("nameserver res: ")
+			fmt.Println(nameserverRes)
+
+			nameserverIps := getIpv4sFromRecords(nameserverRes.Answers)
+			nameserver.ipv4s = nameserverIps
+			fmt.Println("nameserver ips: ", nameserverIps)
+		}
 		for _, nsIp := range nameserver.ipv4s {
 			log.Println(fmt.Sprintf("resolving qname=%v qtype=%v qclass=%v with ns %v %v",
 				query.Qname(),
@@ -332,39 +354,4 @@ func (r *RecursiveResolver) getCachedResponse(query DnsMessage) (*DnsMessage, bo
 		Build()
 
 	return &res, true
-}
-
-// utilities
-
-func getParentDomain(domain string) string {
-	if domain == "." {
-		return domain
-	}
-	parts := strings.Split(domain, ".")
-	parents := parts[1:]
-	parentDomain := strings.Join(parents, ".")
-	if parentDomain == "" {
-		parentDomain += "."
-	}
-	return parentDomain
-}
-
-func getAllDomains(domain string) []string {
-	domains := []string{domain}
-	for domain != "." {
-		parent := getParentDomain(domain)
-		domains = append(domains, parent)
-		domain = parent
-	}
-	return domains
-}
-
-func filterRecordsByType(records []DnsRecord, qtype Type) []DnsRecord {
-	filtered := []DnsRecord{}
-	for _, record := range records {
-		if record.Type == qtype {
-			filtered = append(filtered, record)
-		}
-	}
-	return filtered
 }

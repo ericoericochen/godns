@@ -49,10 +49,12 @@ func (m *DnsMessage) Qclass() Class {
 	return m.Questions[0].Qclass
 }
 
-func NewDnsQuery(qname string, qtype Type, qclass Class, rd bool) DnsMessage {
+// Builder Methods
+//
+
+func NewDnsQuery(qname string, qtype Type, qclass Class) DnsMessage {
 	message := NewDnsMessage()
 	message.Header.Qdcount = 1
-	message.Header.RecursionDesired = rd
 	question := DnsQuestion{
 		Qname:  qname,
 		Qtype:  qtype,
