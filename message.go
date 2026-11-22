@@ -50,7 +50,34 @@ func (m *DnsMessage) Qclass() Class {
 }
 
 // Builder Methods
-//
+
+func (m DnsMessage) SetQR(qr bool) DnsMessage {
+	m.Header.QR = qr
+	return m
+}
+
+func (m DnsMessage) SetRecursionAvailable(ra bool) DnsMessage {
+	m.Header.RecursionAvailable = ra
+	return m
+}
+
+func (m DnsMessage) SetAnswers(records []DnsRecord) DnsMessage {
+	m.Answers = records
+	m.Header.Ancount = uint16(len(records))
+	return m
+}
+
+func (m DnsMessage) SetAuthority(records []DnsRecord) DnsMessage {
+	m.Authority = records
+	m.Header.Nscount = uint16(len(records))
+	return m
+}
+
+func (m DnsMessage) SetAdditional(records []DnsRecord) DnsMessage {
+	m.Additional = records
+	m.Header.Arcount = uint16(len(records))
+	return m
+}
 
 func NewDnsQuery(qname string, qtype Type, qclass Class) DnsMessage {
 	message := NewDnsMessage()

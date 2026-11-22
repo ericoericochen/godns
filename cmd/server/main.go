@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"net/netip"
 	"os"
@@ -75,6 +76,7 @@ func buildDnsResolverFromEnv() (godns.DnsResolver, error) {
 			if err != nil {
 				return nil, err
 			}
+			log.Println(fmt.Sprintf("initializing stub resolver with server=%v, cacheCapacity=%v", serverIp, cacheCapacity))
 			resolver := godns.NewStubResolver().
 				WithServer(serverIp).
 				WithCache(godns.NewDnsCache(cacheCapacity))

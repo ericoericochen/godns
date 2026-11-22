@@ -1,6 +1,7 @@
 package godns
 
 import (
+	"fmt"
 	"log"
 	"net/netip"
 )
@@ -38,7 +39,7 @@ func (r *StubResolver) Resolve(query DnsMessage) DnsMessage {
 	// try to get cached response
 	cachedMessage := r.getCached(query)
 	if cachedMessage != nil {
-		log.Println("cache hit")
+		log.Println(fmt.Sprintf("cache hit for qname=%v, qtype=%v", query.Qname(), typeNameMap[query.Qtype()]))
 		return *cachedMessage
 	}
 
@@ -61,14 +62,16 @@ func (r *StubResolver) getCached(query DnsMessage) *DnsMessage {
 		return nil
 	}
 
-	res := NewDnsMessageBuilder().
-		From(query).
-		Response().
-		RecursionAvailable(true).
-		Answers(entry.Value.Answers).
-		Authority(entry.Value.Authority).
-		Additional(entry.Value.Additional).
-		Build()
+	answers := entry.Value.Answers
+	authority := entry.Value.Authority
+	additional := entry.Value.Additional
+
+	res := query.
+		SetQR(true).
+		SetRecursionAvailable(true).
+		SetAnswers(answers).
+		SetAuthority(authority).
+		SetAdditional(additional)
 
 	return &res
 }
@@ -87,16 +90,4 @@ func (r *StubResolver) maybeCache(query DnsMessage, response DnsMessage) {
 
 func (r *StubResolver) useCache() bool {
 	return r.cache != nil
-}
-
-// utilties
-
-// create dns cache key from dns query message
-func queryToCacheKey(message DnsMessage) DnsCacheKey {
-	question := message.Questions[0]
-	cacheKey := DnsCacheKey{}
-	cacheKey.Qname = question.Qname
-	cacheKey.Qtype = question.Qtype
-	cacheKey.Qclass = question.Qclass
-	return cacheKey
 }
