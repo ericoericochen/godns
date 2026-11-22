@@ -8,6 +8,7 @@ import (
 )
 
 const UDP_DNS_PORT = 53
+const MAX_DNS_MESSAGE_BYTES = 512
 
 func SendUDPDatagram(serverIp netip.Addr, port int, datagram []byte) ([]byte, error) {
 	// create udp connection
@@ -20,7 +21,7 @@ func SendUDPDatagram(serverIp netip.Addr, port int, datagram []byte) ([]byte, er
 	_, err = conn.Write(datagram)
 
 	// receive response
-	resBuffer := make([]byte, 512)
+	resBuffer := make([]byte, MAX_DNS_MESSAGE_BYTES)
 	n, err := conn.Read(resBuffer)
 	if err != nil {
 		return nil, err

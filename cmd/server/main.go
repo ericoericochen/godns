@@ -11,7 +11,6 @@ import (
 	"github.com/ericoericochen/godns"
 )
 
-const SERVER_CONFIG_FILE = "./server.config.json"
 const DNS_RESOLVER_TYPE_ENV = "DNS_RESOLVER_TYPE"
 const DNS_CACHE_CAPACITY_ENV = "DNS_CACHE_CAPACITY"
 const DNS_ROOT_NAMESERVER_ENV = "DNS_ROOT_NAMESERVER"
