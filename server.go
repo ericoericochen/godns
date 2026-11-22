@@ -29,7 +29,7 @@ func (s *DnsServer) Listen(port int) error {
 
 	log.Println(fmt.Sprintf("dns server listening on port %v", conn.LocalAddr()))
 
-	buf := make([]byte, 512)
+	buf := make([]byte, MAX_DNS_MESSAGE_BYTES)
 	for {
 		n, clientAddr, err := conn.ReadFromUDP(buf)
 		if err != nil {
