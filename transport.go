@@ -40,7 +40,7 @@ func SendDnsMessage(nameserverIp netip.Addr, port int, message DnsMessage) DnsMe
 	// send the dns message udp datagram
 	resBuffer, err := SendUDPDatagram(nameserverIp, port, datagram.Bytes())
 	if err != nil {
-		return toResponse(message, RcodeServerFailure)
+		return message.SetQR(true).SetRcode(RcodeServerFailure)
 	}
 
 	// parse dns message
@@ -48,7 +48,7 @@ func SendDnsMessage(nameserverIp netip.Addr, port int, message DnsMessage) DnsMe
 	decoder := NewDnsMessageDecoder(resBuffer)
 	err = decoder.Decode(&res)
 	if err != nil {
-		return toResponse(message, RcodeServerFailure)
+		return message.SetQR(true).SetRcode(RcodeServerFailure)
 	}
 
 	return res

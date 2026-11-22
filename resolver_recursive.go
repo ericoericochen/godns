@@ -20,19 +20,18 @@ type RecursiveResolver struct {
 
 const defaultRootNamserver = A_ROOT_NAMESERVER
 
-func NewRecursiveResolver() *RecursiveResolver {
+func NewRecursiveResolver(cache *DnsCache) *RecursiveResolver {
+	if cache == nil {
+		panic("Cache must not be nil")
+	}
 	return &RecursiveResolver{
 		rootNameserver: defaultRootNamserver,
+		cache:          cache,
 	}
 }
 
-func (r *RecursiveResolver) WithRootNameserver(rootNameserver string) *RecursiveResolver {
+func (r *RecursiveResolver) SetRootNameserver(rootNameserver string) *RecursiveResolver {
 	r.rootNameserver = rootNameserver
-	return r
-}
-
-func (r *RecursiveResolver) WithCache(cache *DnsCache) *RecursiveResolver {
-	r.cache = cache
 	return r
 }
 
@@ -40,7 +39,7 @@ func (r *RecursiveResolver) Resolve(query DnsMessage) DnsMessage {
 	// validate dns query message
 	err := validateQueryDnsMessage(query)
 	if err != nil {
-		return toResponse(query, RcodeFormatError)
+		return query.SetQR(true).SetRcode(RcodeFormatError)
 	}
 
 	// validate dns message
@@ -51,9 +50,9 @@ func (r *RecursiveResolver) Resolve(query DnsMessage) DnsMessage {
 // https://www.rfc-editor.org/info/rfc1034/#section-5.3.3
 func (r *RecursiveResolver) resolve(query DnsMessage) DnsMessage {
 	// check if query response is cached
-	res, cached := r.getCachedResponse(query)
-	if cached {
-		log.Println("cache hit")
+	res := r.getCachedResponse(query)
+	if res != nil {
+		log.Println(fmt.Sprintf("cache hit for qname=%v, qtype=%v", query.Qname(), typeNameMap[query.Qtype()]))
 		return *res
 	}
 
@@ -74,8 +73,6 @@ func (r *RecursiveResolver) resolve(query DnsMessage) DnsMessage {
 			break
 		}
 
-		fmt.Println(res)
-
 		// received answer
 		if len(res.Answers) > 0 {
 			cnameRecords := filterRecordsByType(res.Answers, TypeCNAME)
@@ -88,19 +85,13 @@ func (r *RecursiveResolver) resolve(query DnsMessage) DnsMessage {
 
 			cname := cnameRecords[0].RData
 			cnameQuery := NewDnsQuery(cname, query.Qtype(), query.Qclass())
-			fmt.Println("cname query: ")
-			fmt.Println(cnameQuery)
 			cnameRes := r.resolve(cnameQuery)
 
-			fmt.Println("cname res: ")
-			fmt.Println(cnameRes)
-			builder := NewDnsMessageBuilder().From(res).RecursionAvailable(true)
-			builder = builder.
-				Answers(cnameRes.Answers)
+			answers := []DnsRecord{}
+			answers = append(answers, res.Answers...)
+			answers = append(answers, cnameRes.Answers...)
+			finalRes := query.SetQR(true).SetRecursionAvailable(true).SetAnswers(answers)
 
-			finalRes := builder.Build()
-			finalRes.Header.Nscount = 0
-			finalRes.Authority = []DnsRecord{}
 			r.cacheResponse(query, finalRes)
 			return finalRes
 		}
@@ -108,26 +99,19 @@ func (r *RecursiveResolver) resolve(query DnsMessage) DnsMessage {
 		// get the next set of nameservers to query
 		nextNameservers := r.getNextNameservers(res)
 		nameservers = nextNameservers
-		fmt.Println("next nameservers: ")
-		fmt.Println(nameservers)
 	}
 
-	return toServerFailureResponse(query)
+	return query.SetQR(true).SetRcode(RcodeServerFailure)
 }
 
 func (r *RecursiveResolver) queryNameservers(query DnsMessage, nameservers []nameserverData) DnsMessage {
 	for _, nameserver := range nameservers {
 		numIpv4s := len(nameserver.ipv4s)
 		if numIpv4s == 0 {
-			fmt.Println("no ipv4s for nameserver")
 			nameserverQuery := NewDnsQuery(nameserver.name, TypeA, ClassIN)
 			nameserverRes := r.resolve(nameserverQuery)
-			fmt.Println("nameserver res: ")
-			fmt.Println(nameserverRes)
-
 			nameserverIps := getIpv4sFromRecords(nameserverRes.Answers)
 			nameserver.ipv4s = nameserverIps
-			fmt.Println("nameserver ips: ", nameserverIps)
 		}
 		for _, nsIp := range nameserver.ipv4s {
 			log.Println(fmt.Sprintf("resolving qname=%v qtype=%v qclass=%v with ns %v %v",
@@ -154,7 +138,7 @@ func (r *RecursiveResolver) queryNameservers(query DnsMessage, nameservers []nam
 			return res
 		}
 	}
-	return toServerFailureResponse(query)
+	return query.SetQR(true).SetRcode(RcodeServerFailure)
 }
 
 func (r *RecursiveResolver) getBestStartingNameservers(qname string) []nameserverData {
@@ -180,10 +164,6 @@ func (r *RecursiveResolver) getNameservers(domain string) ([]nameserverData, boo
 			ipv4s: []netip.Addr{rootNameserverIpMap[r.rootNameserver]},
 		}
 		return []nameserverData{nameserver}, true
-	}
-
-	if !r.useCache() {
-		return nil, false
 	}
 
 	// get nameservers
@@ -287,10 +267,6 @@ func (r *RecursiveResolver) getNextNameservers(response DnsMessage) []nameserver
 		nameservers = append(nameservers, *nameserver)
 	}
 
-	if !r.useCache() {
-		return nameservers
-	}
-
 	// cache the referral nameservers and their ip addresses
 	for cacheKey, records := range nsToCache {
 		r.cache.Put(cacheKey, DnsCacheValue{
@@ -313,45 +289,10 @@ func (r *RecursiveResolver) getNextNameservers(response DnsMessage) []nameserver
 
 // cache methods
 
-func (r *RecursiveResolver) useCache() bool {
-	return r.cache != nil
-}
-
 func (r *RecursiveResolver) cacheResponse(query DnsMessage, response DnsMessage) {
-	if !r.useCache() {
-		return
-	}
-
-	cacheKey := newDnsCacheKeyFromMessage(query)
-	cacheValue := DnsCacheValue{
-		Answers:    response.Answers,
-		Authority:  response.Authority,
-		Additional: response.Additional,
-	}
-	r.cache.Put(cacheKey, cacheValue)
+	saveResponseToDnsCache(r.cache, query, response)
 }
 
-func (r *RecursiveResolver) getCachedResponse(query DnsMessage) (*DnsMessage, bool) {
-	if !r.useCache() {
-		return nil, false
-	}
-
-	// get cached dns entry
-	cacheKey := newDnsCacheKeyFromMessage(query)
-	cacheEntry := r.cache.Get(cacheKey)
-	if cacheEntry == nil {
-		return nil, false
-	}
-
-	// build response dns message
-	res := NewDnsMessageBuilder().
-		From(query).
-		Response().
-		RecursionAvailable(true).
-		Answers(cacheEntry.Value.Answers).
-		Authority(cacheEntry.Value.Authority).
-		Additional(cacheEntry.Value.Additional).
-		Build()
-
-	return &res, true
+func (r *RecursiveResolver) getCachedResponse(query DnsMessage) *DnsMessage {
+	return getCachedResponseFromDnsCache(r.cache, query)
 }

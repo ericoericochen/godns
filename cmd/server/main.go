@@ -67,6 +67,7 @@ func getDNSStubNameserver() string {
 func buildDnsResolverFromEnv() (godns.DnsResolver, error) {
 	rt := getDNSResolverType()
 	cacheCapacity := getDNSCacheCapacity()
+	cache := godns.NewDnsCache(cacheCapacity)
 
 	switch rt {
 	case stub:
@@ -77,17 +78,15 @@ func buildDnsResolverFromEnv() (godns.DnsResolver, error) {
 				return nil, err
 			}
 			log.Println(fmt.Sprintf("initializing stub resolver with server=%v, cacheCapacity=%v", serverIp, cacheCapacity))
-			resolver := godns.NewStubResolver().
-				WithServer(serverIp).
-				WithCache(godns.NewDnsCache(cacheCapacity))
+			resolver := godns.NewStubResolver(serverIp, cache)
 			return resolver, nil
 		}
 	case recursive:
 		{
 			rootNameserver := getDNSRootNameserver()
-			resolver := godns.NewRecursiveResolver().
-				WithRootNameserver(rootNameserver).
-				WithCache(godns.NewDnsCache(cacheCapacity))
+			log.Println(fmt.Sprintf("initializing recursive resolver with rootNameserver=%v, cacheCapacity=%v", rootNameserver, cacheCapacity))
+			resolver := godns.NewRecursiveResolver(cache).
+				SetRootNameserver(rootNameserver)
 			return resolver, nil
 		}
 	}

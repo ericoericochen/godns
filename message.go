@@ -56,6 +56,11 @@ func (m DnsMessage) SetQR(qr bool) DnsMessage {
 	return m
 }
 
+func (m DnsMessage) SetRcode(rcode Rcode) DnsMessage {
+	m.Header.Rcode = rcode
+	return m
+}
+
 func (m DnsMessage) SetRecursionAvailable(ra bool) DnsMessage {
 	m.Header.RecursionAvailable = ra
 	return m

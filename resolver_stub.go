@@ -13,27 +13,22 @@ type StubResolver struct {
 
 const CLOUDFLARE_DNS_SERVER = "1.1.1.1"
 
-func NewStubResolver() *StubResolver {
-	ip, _ := netip.ParseAddr(CLOUDFLARE_DNS_SERVER)
-	resolver := &StubResolver{server: ip}
+func NewStubResolver(server netip.Addr, cache *DnsCache) *StubResolver {
+	if !server.Is4() {
+		panic(fmt.Sprintf("%v is not an ipv4 address", server))
+	}
+	if cache == nil {
+		panic("Cache must not be nil")
+	}
+	resolver := &StubResolver{server: server, cache: cache}
 	return resolver
-}
-
-func (r *StubResolver) WithServer(server netip.Addr) *StubResolver {
-	r.server = server
-	return r
-}
-
-func (r *StubResolver) WithCache(cache *DnsCache) *StubResolver {
-	r.cache = cache
-	return r
 }
 
 func (r *StubResolver) Resolve(query DnsMessage) DnsMessage {
 	// validate dns query message
 	err := validateQueryDnsMessage(query)
 	if err != nil {
-		return toResponse(query, RcodeFormatError)
+		return query.SetQR(true).SetRcode(RcodeFormatError)
 	}
 
 	// try to get cached response
@@ -47,47 +42,17 @@ func (r *StubResolver) Resolve(query DnsMessage) DnsMessage {
 	res := SendDnsMessage(r.server, UDP_DNS_PORT, query)
 
 	// cache the response if successful response
-	r.maybeCache(query, res)
+	r.cacheResponse(query, res)
 
 	return res
 }
 
 func (r *StubResolver) getCached(query DnsMessage) *DnsMessage {
-	if !r.useCache() {
-		return nil
-	}
-	cacheKey := queryToCacheKey(query)
-	entry := r.cache.Get(cacheKey)
-	if entry == nil {
-		return nil
-	}
-
-	answers := entry.Value.Answers
-	authority := entry.Value.Authority
-	additional := entry.Value.Additional
-
-	res := query.
-		SetQR(true).
-		SetRecursionAvailable(true).
-		SetAnswers(answers).
-		SetAuthority(authority).
-		SetAdditional(additional)
-
-	return &res
+	return getCachedResponseFromDnsCache(r.cache, query)
 }
 
-func (r *StubResolver) maybeCache(query DnsMessage, response DnsMessage) {
-	if r.useCache() && response.Header.Rcode == RcodeNoError {
-		cacheKey := queryToCacheKey(query)
-		value := DnsCacheValue{
-			Answers:    response.Answers,
-			Authority:  response.Authority,
-			Additional: response.Additional,
-		}
-		r.cache.Put(cacheKey, value)
+func (r *StubResolver) cacheResponse(query DnsMessage, response DnsMessage) {
+	if response.Header.Rcode == RcodeNoError {
+		saveResponseToDnsCache(r.cache, query, response)
 	}
-}
-
-func (r *StubResolver) useCache() bool {
-	return r.cache != nil
 }

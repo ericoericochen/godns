@@ -27,13 +27,3 @@ func validateQueryDnsMessage(message DnsMessage) error {
 
 	return nil
 }
-
-// response
-
-func toResponse(message DnsMessage, rcode Rcode) DnsMessage {
-	return NewDnsMessageBuilder().From(message).Response().Rcode(rcode).Build()
-}
-
-func toServerFailureResponse(message DnsMessage) DnsMessage {
-	return toResponse(message, RcodeServerFailure)
-}

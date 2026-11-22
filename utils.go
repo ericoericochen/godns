@@ -60,13 +60,3 @@ func getIpv4sFromRecords(records []DnsRecord) []netip.Addr {
 	}
 	return ipv4s
 }
-
-// Create dns cache key from dns query message
-func queryToCacheKey(message DnsMessage) DnsCacheKey {
-	question := message.Questions[0]
-	cacheKey := DnsCacheKey{}
-	cacheKey.Qname = question.Qname
-	cacheKey.Qtype = question.Qtype
-	cacheKey.Qclass = question.Qclass
-	return cacheKey
-}
